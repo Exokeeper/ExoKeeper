@@ -1130,7 +1130,6 @@ function loadDB(){
   if(!DB.masters.foods)DB.masters.foods=[];
   DB.animals.forEach(a=>{if(a.category==='insect')a.category='arthropod';});
 }
-function saveDB(){localStorage.setItem('exokeeper_db',JSON.stringify(DB));}
 
 // ─── State ────────────────────────────────────────
 let currentFilter='all',currentAnimalId=null,currentDetailTab='profile';
