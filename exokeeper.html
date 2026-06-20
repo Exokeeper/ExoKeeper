@@ -412,9 +412,6 @@
   <div class="page" id="page-animals">
     <div class="filter-bar" id="filterBar">
       <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
-      <button class="filter-btn" onclick="setFilter('role-pet',this)">🐾 ペット</button>
-      <button class="filter-btn" onclick="setFilter('role-feeder',this)">🍖 餌用</button>
-      <button class="filter-btn" onclick="setFilter('role-breed',this)">🥚 繁殖用</button>
       <button class="filter-btn" onclick="setFilter('untagged',this)">🏷️ 未分類</button>
       <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>document.getElementById('catTagList')?.scrollIntoView({behavior:'smooth'}),200)" style="color:var(--text2)">⚙️ タグ設定</button>
     </div>
@@ -506,6 +503,10 @@
     <div class="settings-card">
       <div class="theme-grid" id="themeGrid"></div>
     </div>
+
+    <div class="section-title">役割タグ</div>
+    <div class="settings-hint">フィルターに表示する役割タグを管理します。</div>
+    <div id="roleTagList"></div>
 
     <div class="section-title">分類タグ</div>
     <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
@@ -610,7 +611,7 @@
         <select class="form-select" id="inputRole">
           <option value="pet">🐾 ペット</option>
           <option value="feeder">🍖 餌用</option>
-          <option value="breed">🥚 繁殖用</option>
+          <option value="breed">🥚 繁殖</option>
         </select>
       </div>
     </div>
@@ -1094,7 +1095,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,
+      catTags:DB.catTags,roleTags:DB.roleTags,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1122,6 +1123,9 @@ async function loadFromCloud(){
     {id:'reptile',show:true},{id:'amphibian',show:true},{id:'arthropod',show:true},
     {id:'mammal',show:true},{id:'bird',show:true},{id:'fish',show:true},{id:'other',show:true},
   ];
+  DB.roleTags=d.roleTags||[
+    {id:'pet',show:true},{id:'feeder',show:true},{id:'breed',show:true},
+  ];
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1134,7 +1138,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1169,7 +1173,7 @@ let editingTaskId=null,taskRepeat='daily',taskDays=[],notifPermission='default';
 
 const CAT_LABEL={reptile:'爬虫類',amphibian:'両生類',arthropod:'節足動物',mammal:'哺乳類',bird:'鳥類',fish:'魚類',other:'その他'};
 const CAT_EMOJI={reptile:'🦎',amphibian:'🐸',arthropod:'🕷️',mammal:'🐭',bird:'🐦',fish:'🐟',other:'🔮'};
-const ROLE_LABEL={pet:'ペット',feeder:'餌用',breed:'繁殖用'};
+const ROLE_LABEL={pet:'ペット',feeder:'餌用',breed:'繁殖'};
 const ROLE_EMOJI={pet:'🐾',feeder:'🍖',breed:'🥚'};
 
 // ─── Page navigation ──────────────────────────────
@@ -1263,8 +1267,36 @@ function renderSettings(){
         <span style="font-size:10px;color:${t.accent};font-weight:700">${t.label}</span>
       </div>`).join('');
   }
+  renderRoleTagList();
   renderCatTagList();
   renderUserTagList();
+}
+
+function renderRoleTagList(){
+  const el=document.getElementById('roleTagList');
+  if(!el)return;
+  el.innerHTML=DB.roleTags.map((r,i)=>`
+    <div class="user-tag-row">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveRoleTag(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveRoleTag(${i},1)" ${i===DB.roleTags.length-1?'disabled':''}>▼</button>
+      </div>
+      <div class="user-tag-dot" style="background:var(--accent)"></div>
+      <div class="user-tag-name">${ROLE_EMOJI[r.id]} ${ROLE_LABEL[r.id]}</div>
+      <button class="user-tag-toggle ${r.show?'on':'off'}" onclick="toggleRoleTag(${i})"></button>
+    </div>`).join('');
+}
+
+function toggleRoleTag(i){
+  DB.roleTags[i].show=!DB.roleTags[i].show;
+  saveDB();renderRoleTagList();renderAnimals();
+}
+
+function moveRoleTag(i,dir){
+  const newI=i+dir;
+  if(newI<0||newI>=DB.roleTags.length)return;
+  const tmp=DB.roleTags[i];DB.roleTags[i]=DB.roleTags[newI];DB.roleTags[newI]=tmp;
+  saveDB();renderRoleTagList();renderAnimals();
 }
 
 function renderCatTagList(){
@@ -2465,6 +2497,19 @@ function renderAnimals(){
 
   // ユーザータグフィルターボタンを動的生成
   const filterBar=document.getElementById('filterBar');
+  // 役割タグボタンを動的生成
+  const existingRoleBtns=filterBar.querySelectorAll('[data-roletag]');
+  existingRoleBtns.forEach(b=>b.remove());
+  const allBtn=filterBar.querySelector('[onclick*="all"]');
+  DB.roleTags.filter(r=>r.show).forEach(r=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn'+(currentFilter==='role-'+r.id?' active':'');
+    btn.dataset.roletag=r.id;
+    btn.textContent=`${ROLE_EMOJI[r.id]} ${ROLE_LABEL[r.id]}`;
+    btn.onclick=()=>setFilter('role-'+r.id,btn);
+    allBtn.insertAdjacentElement('afterend',btn);
+  });
+
   // 固定タグボタンを動的生成（設定の順番・表示に従う）
   const existingCatBtns=filterBar.querySelectorAll('[data-cattag]');
   existingCatBtns.forEach(b=>b.remove());
@@ -3006,6 +3051,11 @@ async function initApp(user){
     DB.catTags=[
       {id:'reptile',show:true},{id:'amphibian',show:true},{id:'arthropod',show:true},
       {id:'mammal',show:true},{id:'bird',show:true},{id:'fish',show:true},{id:'other',show:true},
+    ];
+  }
+  if(!DB.roleTags||!DB.roleTags.length){
+    DB.roleTags=[
+      {id:'pet',show:true},{id:'feeder',show:true},{id:'breed',show:true},
     ];
   }
   initTheme();renderHome();renderAnimals();
