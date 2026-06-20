@@ -1919,7 +1919,7 @@ function registerOffspring(sessionId,eventId){
   document.getElementById('inputName').value='';
   document.getElementById('inputSpecies').value=species;
   document.getElementById('inputCategory').value=category;
-  document.getElementById('inputRole').value='pet';
+  if(document.getElementById('inputRole'))document.getElementById('inputRole').value='pet';
   document.getElementById('inputWeight').value=event.weight||'';
   document.getElementById('inputLength').value='';
   document.getElementById('inputAcquiredDate').value=event.date;
@@ -2933,7 +2933,7 @@ function openEditModal(id){
   document.getElementById('inputName').value=a.name||'';
   document.getElementById('inputSpecies').value=a.species||'';
   document.getElementById('inputCategory').value=a.category||'reptile';
-  document.getElementById('inputRole').value=a.role||'pet';
+  if(document.getElementById('inputRole'))document.getElementById('inputRole').value=a.role||'pet';
   document.getElementById('inputWeight').value=a.weight||'';
   document.getElementById('inputLength').value=a.length||'';
   document.getElementById('inputAcquiredDate').value=a.acquiredDate||'';
@@ -2956,7 +2956,7 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 function clearForm(){
   ['inputName','inputSpecies','inputWeight','inputLength','inputAcquiredDate','inputAcquiredFrom','inputMemo'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('inputCategory').value='reptile';
-  document.getElementById('inputRole').value='pet';
+  if(document.getElementById('inputRole'))document.getElementById('inputRole').value='pet';
   document.querySelectorAll('.seg-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
   document.getElementById('photoUploadArea').innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
   renderTagChips('morphWrap','morphInput',[],'morphs','morphSug');
@@ -2970,7 +2970,7 @@ function saveAnimal(){
   const genType=document.getElementById('inputGenType')?.value||'';
   const genNum=document.getElementById('inputGenNum')?.value||'';
   const generation=genType==='F'?`F${genNum}`:genType;
-  const data={name:document.getElementById('inputName').value.trim(),species:document.getElementById('inputSpecies').value.trim(),category:document.getElementById('inputCategory').value,role:document.getElementById('inputRole').value,sex:currentSex,photo:photoData,morphs:[...morphTags],hets:[...hetTags],userTags:[...currentAnimalUserTags],weight:document.getElementById('inputWeight').value,length:document.getElementById('inputLength').value,acquiredDate:document.getElementById('inputAcquiredDate').value,acquiredFrom:document.getElementById('inputAcquiredFrom').value.trim(),memo:document.getElementById('inputMemo').value.trim(),generation,locality:document.getElementById('inputLocality')?.value.trim()||'',bloodline:document.getElementById('inputBloodline')?.value.trim()||''};
+  const data={name:document.getElementById('inputName').value.trim(),species:document.getElementById('inputSpecies').value.trim(),category:document.getElementById('inputCategory').value,role:document.getElementById('inputRole')?.value||'pet',sex:currentSex,photo:photoData,morphs:[...morphTags],hets:[...hetTags],userTags:[...currentAnimalUserTags],weight:document.getElementById('inputWeight').value,length:document.getElementById('inputLength').value,acquiredDate:document.getElementById('inputAcquiredDate').value,acquiredFrom:document.getElementById('inputAcquiredFrom').value.trim(),memo:document.getElementById('inputMemo').value.trim(),generation,locality:document.getElementById('inputLocality')?.value.trim()||'',bloodline:document.getElementById('inputBloodline')?.value.trim()||''};
   if(data.species&&!DB.masters.species.includes(data.species))DB.masters.species.push(data.species);
   data.morphs.forEach(m=>{if(!DB.masters.morphs.includes(m))DB.masters.morphs.push(m);});
   data.hets.forEach(h=>{if(!DB.masters.hets.includes(h))DB.masters.hets.push(h);});
@@ -3012,7 +3012,7 @@ function copyAnimal(id){
   document.getElementById('inputName').value='';
   document.getElementById('inputSpecies').value=a.species||'';
   document.getElementById('inputCategory').value=a.category;
-  document.getElementById('inputRole').value=a.role;
+  if(document.getElementById('inputRole'))document.getElementById('inputRole').value=a.role||'pet';
   document.getElementById('inputWeight').value='';
   document.getElementById('inputLength').value='';
   document.getElementById('inputAcquiredDate').value='';
