@@ -3087,6 +3087,14 @@ function renderSpeciesTagSelectList(){
     </div>`).join('');
 }
 
+function closeDetailFields(){
+  const wrap=document.getElementById('detailFieldsWrap');
+  const btn=document.getElementById('detailFieldsBtn');
+  if(!wrap)return;
+  wrap.style.display='none';
+  if(btn)btn.querySelector('span').textContent='▼ 詳細項目を追加（モルフ・累代・産地など）';
+}
+
 function toggleDetailFields(){
   const wrap=document.getElementById('detailFieldsWrap');
   const btn=document.getElementById('detailFieldsBtn');
