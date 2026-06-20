@@ -1077,8 +1077,7 @@ const TABLE_MAP={
 async function syncToCloud(){
   if(!currentUser)return;
   const uid=currentUser.id;
-  // settingsテーブルにDB全体を保存
-  const{error}=await sbClient.from('settings').upsert({
+  const payload={
     user_id:uid,
     data:{
       animals:DB.animals,feedings:DB.feedings,measurements:DB.measurements,
@@ -1087,8 +1086,16 @@ async function syncToCloud(){
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
-  },{onConflict:'user_id'});
-  if(error)console.error('sync error:',error);
+  };
+  // まず既存レコードを確認
+  const{data:existing}=await sbClient.from('settings').select('id').eq('user_id',uid).single();
+  if(existing){
+    const{error}=await sbClient.from('settings').update({data:payload.data}).eq('user_id',uid);
+    if(error)console.error('sync update error:',error);
+  }else{
+    const{error}=await sbClient.from('settings').insert(payload);
+    if(error)console.error('sync insert error:',error);
+  }
 }
 
 async function loadFromCloud(){
