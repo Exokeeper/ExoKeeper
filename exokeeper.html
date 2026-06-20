@@ -583,15 +583,17 @@
         onfocus="showSuggestions('inputSpecies','speciesSug')" autocomplete="off">
       <div class="tag-suggestions" id="speciesSug"></div>
     </div>
-    <div class="form-group" id="speciesTagCheckGroup" style="display:none">
+    <div class="form-group">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px">
-        <input type="checkbox" id="speciesTagCheck" style="width:18px;height:18px;cursor:pointer" onchange="updateSpeciesTagCheck()">
+        <input type="checkbox" id="speciesTagCheck" style="width:18px;height:18px;cursor:pointer">
         <span>種名をタグとして登録する</span>
       </label>
     </div>
-    <div class="form-group" id="speciesTagSelectGroup" style="display:none">
-      <label class="form-label">追加するタグを選択</label>
-      <div id="speciesTagSelectList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    <div class="form-group">
+      <label class="form-label">タグを選択（任意）</label>
+      <div id="speciesTagSelectList" style="display:flex;flex-wrap:wrap;gap:6px">
+        <span style="font-size:13px;color:var(--text2)">設定ページでタグを作成すると選択できます</span>
+      </div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -2752,6 +2754,7 @@ function openAddModal(){
   document.getElementById('modalTitle').textContent='生体を登録';
   clearForm();document.getElementById('deleteBtn').innerHTML='';
   renderUserTagCheckboxes([]);
+  renderSpeciesTagSelectList();
   document.getElementById('animalModal').classList.add('open');
 }
 
@@ -2793,8 +2796,7 @@ function clearForm(){
   renderTagChips('hetWrap','hetInput',[],'hets','hetSug');
   const stc=document.getElementById('speciesTagCheck');
   if(stc)stc.checked=false;
-  document.getElementById('speciesTagCheckGroup').style.display='none';
-  document.getElementById('speciesTagSelectGroup').style.display='none';
+  renderSpeciesTagSelectList();
 }
 
 function saveAnimal(){
@@ -2864,21 +2866,13 @@ function handlePhoto(e){
   reader.readAsDataURL(file);
 }
 
-// ── 種名タグ登録チェック ──
-function updateSpeciesTagCheck(){
-  const species=document.getElementById('inputSpecies').value.trim();
-  const group=document.getElementById('speciesTagCheckGroup');
-  const selectGroup=document.getElementById('speciesTagSelectGroup');
-  if(!species){group.style.display='none';selectGroup.style.display='none';return;}
-  group.style.display='block';
-  // 既存タグ一覧も表示
-  renderSpeciesTagSelectList();
-  selectGroup.style.display=DB.userTags.length?'block':'none';
-}
-
 function renderSpeciesTagSelectList(){
   const el=document.getElementById('speciesTagSelectList');
   if(!el)return;
+  if(!DB.userTags.length){
+    el.innerHTML='<span style="font-size:13px;color:var(--text2)">設定ページでタグを作成すると選択できます</span>';
+    return;
+  }
   el.innerHTML=DB.userTags.map(t=>`
     <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);border:1px solid ${currentAnimalUserTags.includes(t.id)?t.color:'var(--border)'};border-radius:20px;padding:5px 12px;cursor:pointer"
       onclick="toggleAnimalUserTag(${t.id});renderSpeciesTagSelectList()">
@@ -2887,6 +2881,8 @@ function renderSpeciesTagSelectList(){
       ${currentAnimalUserTags.includes(t.id)?'<span style="color:var(--accent2)">✓</span>':''}
     </div>`).join('');
 }
+
+function updateSpeciesTagCheck(){}
 
 // ─── Suggestions ──────────────────────────────────
 function showSuggestions(inputId,sugId){
