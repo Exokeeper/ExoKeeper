@@ -1118,7 +1118,10 @@ async function loadFromCloud(){
   DB.photos=d.photos||[];DB.tasks=d.tasks||[];DB.healthLogs=d.healthLogs||[];
   DB.breedSessions=d.breedSessions||[];DB.breedEvents=d.breedEvents||[];
   DB.shopItems=d.shopItems||[];DB.shops=d.shops||[];DB.userTags=d.userTags||[];
-  DB.catTags=d.catTags||null;
+  DB.catTags=d.catTags||[
+    {id:'reptile',show:true},{id:'amphibian',show:true},{id:'arthropod',show:true},
+    {id:'mammal',show:true},{id:'bird',show:true},{id:'fish',show:true},{id:'other',show:true},
+  ];
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -2996,9 +2999,15 @@ async function initApp(user){
   currentUser=user;
   document.getElementById('headerUserEmail').textContent=user.email;
   document.getElementById('authScreen').style.display='none';
-  loadDB();
   const loaded=await loadFromCloud();
-  if(!loaded){}
+  if(!loaded)loadDB();
+  // catTagsのマイグレーション
+  if(!DB.catTags||!DB.catTags.length){
+    DB.catTags=[
+      {id:'reptile',show:true},{id:'amphibian',show:true},{id:'arthropod',show:true},
+      {id:'mammal',show:true},{id:'bird',show:true},{id:'fish',show:true},{id:'other',show:true},
+    ];
+  }
   initTheme();renderHome();renderAnimals();
   if('Notification' in window && Notification.permission==='granted'){
     DB.tasks.filter(t=>t.enabled).forEach(scheduleNotification);
