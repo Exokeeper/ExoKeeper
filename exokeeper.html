@@ -415,15 +415,8 @@
       <button class="filter-btn" onclick="setFilter('role-pet',this)">🐾 ペット</button>
       <button class="filter-btn" onclick="setFilter('role-feeder',this)">🍖 餌用</button>
       <button class="filter-btn" onclick="setFilter('role-breed',this)">🥚 繁殖用</button>
-      <button class="filter-btn" onclick="setFilter('reptile',this)">🦎 爬虫類</button>
-      <button class="filter-btn" onclick="setFilter('amphibian',this)">🐸 両生類</button>
-      <button class="filter-btn" onclick="setFilter('arthropod',this)">🕷️ 節足動物</button>
-      <button class="filter-btn" onclick="setFilter('mammal',this)">🐭 哺乳類</button>
-      <button class="filter-btn" onclick="setFilter('bird',this)">🐦 鳥類</button>
-      <button class="filter-btn" onclick="setFilter('fish',this)">🐟 魚類</button>
-      <button class="filter-btn" onclick="setFilter('other',this)">🔮 その他</button>
       <button class="filter-btn" onclick="setFilter('untagged',this)">🏷️ 未分類</button>
-      <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>document.getElementById('userTagList')?.scrollIntoView({behavior:'smooth'}),200)" style="color:var(--text2)">⚙️ タグ設定</button>
+      <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>document.getElementById('catTagList')?.scrollIntoView({behavior:'smooth'}),200)" style="color:var(--text2)">⚙️ タグ設定</button>
     </div>
     <div class="animal-grid" id="animalGrid"></div>
     <div id="animalEmpty" class="empty-state" style="display:none">
@@ -513,6 +506,10 @@
     <div class="settings-card">
       <div class="theme-grid" id="themeGrid"></div>
     </div>
+
+    <div class="section-title">分類タグ</div>
+    <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
+    <div id="catTagList"></div>
 
     <div class="section-title">ユーザータグ</div>
     <div class="settings-hint">生体や繁殖ログに付けられる独自タグを管理します。フィルターに表示するかも選べます。</div>
@@ -1097,6 +1094,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
+      catTags:DB.catTags,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1120,6 +1118,7 @@ async function loadFromCloud(){
   DB.photos=d.photos||[];DB.tasks=d.tasks||[];DB.healthLogs=d.healthLogs||[];
   DB.breedSessions=d.breedSessions||[];DB.breedEvents=d.breedEvents||[];
   DB.shopItems=d.shopItems||[];DB.shops=d.shops||[];DB.userTags=d.userTags||[];
+  DB.catTags=d.catTags||null;
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1132,7 +1131,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1146,6 +1145,15 @@ function loadDB(){
   if(!DB.breedSessions)DB.breedSessions=[];
   if(!DB.breedEvents)DB.breedEvents=[];
   if(!DB.userTags)DB.userTags=[];
+  if(!DB.catTags)DB.catTags=[
+    {id:'reptile',  show:true},
+    {id:'amphibian',show:true},
+    {id:'arthropod',show:true},
+    {id:'mammal',   show:true},
+    {id:'bird',     show:true},
+    {id:'fish',     show:true},
+    {id:'other',    show:true},
+  ];
   if(!DB.theme)DB.theme='blue';
   if(!DB.masters.foods)DB.masters.foods=[];
   DB.animals.forEach(a=>{if(a.category==='insect')a.category='arthropod';});
@@ -1243,7 +1251,6 @@ const TAG_COLORS=[
 let editingUserTagId=null, currentUserTagColor=TAG_COLORS[0], currentUserTagShow=1;
 
 function renderSettings(){
-  // テーマ
   const grid=document.getElementById('themeGrid');
   if(grid){
     grid.innerHTML=THEMES.map(t=>`
@@ -1253,8 +1260,35 @@ function renderSettings(){
         <span style="font-size:10px;color:${t.accent};font-weight:700">${t.label}</span>
       </div>`).join('');
   }
-  // ユーザータグ
+  renderCatTagList();
   renderUserTagList();
+}
+
+function renderCatTagList(){
+  const el=document.getElementById('catTagList');
+  if(!el)return;
+  el.innerHTML=DB.catTags.map((c,i)=>`
+    <div class="user-tag-row">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveCatTag(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveCatTag(${i},1)" ${i===DB.catTags.length-1?'disabled':''}>▼</button>
+      </div>
+      <div class="user-tag-dot" style="background:var(--accent)"></div>
+      <div class="user-tag-name">${CAT_EMOJI[c.id]} ${CAT_LABEL[c.id]}</div>
+      <button class="user-tag-toggle ${c.show?'on':'off'}" onclick="toggleCatTag(${i})"></button>
+    </div>`).join('');
+}
+
+function toggleCatTag(i){
+  DB.catTags[i].show=!DB.catTags[i].show;
+  saveDB();renderCatTagList();renderAnimals();
+}
+
+function moveCatTag(i,dir){
+  const newI=i+dir;
+  if(newI<0||newI>=DB.catTags.length)return;
+  const tmp=DB.catTags[i];DB.catTags[i]=DB.catTags[newI];DB.catTags[newI]=tmp;
+  saveDB();renderCatTagList();renderAnimals();
 }
 
 function applyTheme(id){
@@ -2428,6 +2462,20 @@ function renderAnimals(){
 
   // ユーザータグフィルターボタンを動的生成
   const filterBar=document.getElementById('filterBar');
+  // 固定タグボタンを動的生成（設定の順番・表示に従う）
+  const existingCatBtns=filterBar.querySelectorAll('[data-cattag]');
+  existingCatBtns.forEach(b=>b.remove());
+  const untaggedBtn=filterBar.querySelector('[onclick*="untagged"]');
+  DB.catTags.filter(c=>c.show).forEach(c=>{
+    const btn=document.createElement('button');
+    btn.className='filter-btn'+(currentFilter===c.id?' active':'');
+    btn.dataset.cattag=c.id;
+    btn.textContent=`${CAT_EMOJI[c.id]} ${CAT_LABEL[c.id]}`;
+    btn.onclick=()=>setFilter(c.id,btn);
+    filterBar.insertBefore(btn,untaggedBtn);
+  });
+
+  // ユーザータグボタンを動的生成
   const visibleUserTags=DB.userTags.filter(t=>t.show);
   const existingUserTagBtns=filterBar.querySelectorAll('[data-usertag]');
   existingUserTagBtns.forEach(b=>b.remove());
@@ -2437,7 +2485,7 @@ function renderAnimals(){
     btn.dataset.usertag=t.id;
     btn.innerHTML=`<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${t.color};margin-right:4px"></span>${t.name}`;
     btn.onclick=()=>setFilter('utag-'+t.id,btn);
-    filterBar.appendChild(btn);
+    filterBar.insertBefore(btn,untaggedBtn);
   });
 
   let list=DB.animals;
