@@ -600,7 +600,7 @@
         <select class="form-select" id="inputCategory">
           <option value="reptile">🦎 爬虫類</option>
           <option value="amphibian">🐸 両生類</option>
-          <option value="arthropod">🕷️ 節足動物（昆虫含む）</option>
+          <option value="arthropod">🕷️ 節足動物</option>
           <option value="mammal">🐭 哺乳類</option>
           <option value="bird">🐦 鳥類</option>
           <option value="fish">🐟 魚類</option>
@@ -615,74 +615,83 @@
         <button class="seg-btn" data-sex="♀" onclick="setSex('♀',this)">♀ メス</button>
       </div>
     </div>
-    <div class="form-group">
-      <label class="form-label">モルフ（任意）</label>
-      <p class="form-hint">1モルフずつ入力して <strong style="color:var(--text)">Enter</strong> または <strong style="color:var(--text)">，</strong> で追加。複数登録できます。</p>
-      <div class="tag-input-wrap" id="morphWrap" onclick="document.getElementById('morphInput').focus()">
-        <input class="tag-input-field" id="morphInput" placeholder="例）マックスノー → Enter → ベルアルビノ"
-          oninput="showTagSuggestions('morphInput','morphSug','morphs')"
-          onkeydown="handleTagKey(event,'morphInput','morphWrap','morphs','morphSug')">
-      </div>
-      <div class="tag-suggestions" id="morphSug"></div>
+    <!-- 詳細項目（折りたたみ） -->
+    <div style="margin-bottom:16px">
+      <button type="button" onclick="toggleDetailFields()" id="detailFieldsBtn"
+        style="width:100%;padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:14px;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center">
+        <span>▼ 詳細項目を追加（モルフ・累代・産地など）</span>
+      </button>
     </div>
-    <div class="form-group">
-      <label class="form-label">ヘテロ（任意）</label>
-      <p class="form-hint">同様に1つずつ Enter で追加できます。</p>
-      <div class="tag-input-wrap" id="hetWrap" onclick="document.getElementById('hetInput').focus()">
-        <input class="tag-input-field" id="hetInput" placeholder="例）hetエクリプス → Enter → hetラプター"
-          oninput="showTagSuggestions('hetInput','hetSug','hets')"
-          onkeydown="handleTagKey(event,'hetInput','hetWrap','hets','hetSug')">
-      </div>
-      <div class="tag-suggestions" id="hetSug"></div>
-    </div>
-    <div class="form-row" id="formField-generation" style="display:none">
+    <div id="detailFieldsWrap" style="display:none">
       <div class="form-group">
-        <label class="form-label">累代</label>
-        <select class="form-select" id="inputGenType" onchange="updateGenInput()">
-          <option value="">不明</option>
-          <option value="WD">WD（野生個体）</option>
-          <option value="CB">CB（人工繁殖）</option>
-          <option value="FH">FH（ファームハッチ）</option>
-          <option value="LH">LH（長期飼育）</option>
-          <option value="F">F（世代数を入力）</option>
-        </select>
-      </div>
-      <div class="form-group" id="genNumGroup" style="display:none">
-        <label class="form-label">世代数</label>
-        <input class="form-input" id="inputGenNum" type="number" placeholder="例）1" min="1">
-      </div>
-    </div>
-    <div class="form-group" id="formField-locality" style="display:none">
-      <label class="form-label">産地（任意）</label>
-      <input class="form-input" id="inputLocality" placeholder="例）山梨県・スマトラ島">
-    </div>
-    <div class="form-group" id="formField-bloodline" style="display:none">
-      <label class="form-label">血統名（任意）</label>
-      <input class="form-input" id="inputBloodline" placeholder="例）○○血統">
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label class="form-label">体重（任意）</label>
-        <input class="form-input" id="inputWeight" type="number" placeholder="g">
+        <label class="form-label">モルフ（任意）</label>
+        <p class="form-hint">1モルフずつ入力して <strong style="color:var(--text)">Enter</strong> または <strong style="color:var(--text)">，</strong> で追加。複数登録できます。</p>
+        <div class="tag-input-wrap" id="morphWrap" onclick="document.getElementById('morphInput').focus()">
+          <input class="tag-input-field" id="morphInput" placeholder="例）マックスノー → Enter → ベルアルビノ"
+            oninput="showTagSuggestions('morphInput','morphSug','morphs')"
+            onkeydown="handleTagKey(event,'morphInput','morphWrap','morphs','morphSug')">
+        </div>
+        <div class="tag-suggestions" id="morphSug"></div>
       </div>
       <div class="form-group">
-        <label class="form-label">全長（任意）</label>
-        <input class="form-input" id="inputLength" type="number" placeholder="mm">
+        <label class="form-label">ヘテロ（任意）</label>
+        <p class="form-hint">同様に1つずつ Enter で追加できます。</p>
+        <div class="tag-input-wrap" id="hetWrap" onclick="document.getElementById('hetInput').focus()">
+          <input class="tag-input-field" id="hetInput" placeholder="例）hetエクリプス → Enter → hetラプター"
+            oninput="showTagSuggestions('hetInput','hetSug','hets')"
+            onkeydown="handleTagKey(event,'hetInput','hetWrap','hets','hetSug')">
+        </div>
+        <div class="tag-suggestions" id="hetSug"></div>
       </div>
-    </div>
-    <div class="form-row">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">累代</label>
+          <select class="form-select" id="inputGenType" onchange="updateGenInput()">
+            <option value="">不明</option>
+            <option value="WD">WD（野生個体）</option>
+            <option value="CB">CB（人工繁殖）</option>
+            <option value="FH">FH（ファームハッチ）</option>
+            <option value="LH">LH（長期飼育）</option>
+            <option value="F">F（世代数を入力）</option>
+          </select>
+        </div>
+        <div class="form-group" id="genNumGroup" style="display:none">
+          <label class="form-label">世代数</label>
+          <input class="form-input" id="inputGenNum" type="number" placeholder="例）1" min="1">
+        </div>
+      </div>
       <div class="form-group">
-        <label class="form-label">入手日（任意）</label>
-        <input class="form-input" id="inputAcquiredDate" type="date">
+        <label class="form-label">産地（任意）</label>
+        <input class="form-input" id="inputLocality" placeholder="例）山梨県・スマトラ島">
       </div>
       <div class="form-group">
-        <label class="form-label">入手元（任意）</label>
-        <input class="form-input" id="inputAcquiredFrom" placeholder="ブリーダー名など">
+        <label class="form-label">血統名（任意）</label>
+        <input class="form-input" id="inputBloodline" placeholder="例）○○血統">
       </div>
-    </div>
-    <div class="form-group">
-      <label class="form-label">メモ（任意）</label>
-      <textarea class="form-textarea" id="inputMemo" placeholder="自由記述"></textarea>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">体重（任意）</label>
+          <input class="form-input" id="inputWeight" type="number" placeholder="g">
+        </div>
+        <div class="form-group">
+          <label class="form-label">全長（任意）</label>
+          <input class="form-input" id="inputLength" type="number" placeholder="mm">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">入手日（任意）</label>
+          <input class="form-input" id="inputAcquiredDate" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">入手元（任意）</label>
+          <input class="form-input" id="inputAcquiredFrom" placeholder="ブリーダー名など">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">メモ（任意）</label>
+        <textarea class="form-textarea" id="inputMemo" placeholder="自由記述"></textarea>
+      </div>
     </div>
     <div class="form-group" id="userTagFormGroup">
       <label class="form-label">ユーザータグ（任意）</label>
@@ -2939,6 +2948,19 @@ function openEditModal(id){
   document.getElementById('inputAcquiredDate').value=a.acquiredDate||'';
   document.getElementById('inputAcquiredFrom').value=a.acquiredFrom||'';
   document.getElementById('inputMemo').value=a.memo||'';
+  // 累代
+  if(a.generation){
+    const genType=document.getElementById('inputGenType');
+    if(genType){
+      if(a.generation.startsWith('F')&&a.generation.length>1){
+        genType.value='F';
+        document.getElementById('inputGenNum').value=a.generation.slice(1);
+        document.getElementById('genNumGroup').style.display='block';
+      }else{genType.value=a.generation;}
+    }
+  }
+  if(document.getElementById('inputLocality'))document.getElementById('inputLocality').value=a.locality||'';
+  if(document.getElementById('inputBloodline'))document.getElementById('inputBloodline').value=a.bloodline||'';
   document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.sex===currentSex));
   const area=document.getElementById('photoUploadArea');
   area.innerHTML=photoData
@@ -2947,6 +2969,13 @@ function openEditModal(id){
   renderTagChips('morphWrap','morphInput',morphTags,'morphs','morphSug');
   renderTagChips('hetWrap','hetInput',hetTags,'hets','hetSug');
   renderUserTagCheckboxes(currentAnimalUserTags);
+  renderSpeciesTagSelectList();
+  // 詳細項目に入力がある場合は自動展開
+  if(a.morphs?.length||a.hets?.length||a.generation||a.locality||a.bloodline||a.weight||a.acquiredDate||a.memo){
+    openDetailFields();
+  }else{
+    closeDetailFields();
+  }
   document.getElementById('deleteBtn').innerHTML=`<button class="btn btn-danger" onclick="deleteAnimal(${id})">🗑️ この生体を削除</button>`;
   document.getElementById('animalModal').classList.add('open');
 }
@@ -2964,6 +2993,12 @@ function clearForm(){
   const stc=document.getElementById('speciesTagCheck');
   if(stc)stc.checked=false;
   renderSpeciesTagSelectList();
+  closeDetailFields();
+  if(document.getElementById('inputGenType'))document.getElementById('inputGenType').value='';
+  if(document.getElementById('inputGenNum'))document.getElementById('inputGenNum').value='';
+  if(document.getElementById('genNumGroup'))document.getElementById('genNumGroup').style.display='none';
+  if(document.getElementById('inputLocality'))document.getElementById('inputLocality').value='';
+  if(document.getElementById('inputBloodline'))document.getElementById('inputBloodline').value='';
 }
 
 function saveAnimal(){
@@ -3050,6 +3085,23 @@ function renderSpeciesTagSelectList(){
       <span style="font-size:13px;font-weight:600">${t.name}</span>
       ${currentAnimalUserTags.includes(t.id)?'<span style="color:var(--accent2)">✓</span>':''}
     </div>`).join('');
+}
+
+function toggleDetailFields(){
+  const wrap=document.getElementById('detailFieldsWrap');
+  const btn=document.getElementById('detailFieldsBtn');
+  if(!wrap)return;
+  const open=wrap.style.display==='none';
+  wrap.style.display=open?'block':'none';
+  if(btn)btn.querySelector('span').textContent=open?'▲ 詳細項目を閉じる':'▼ 詳細項目を追加（モルフ・累代・産地など）';
+}
+
+function openDetailFields(){
+  const wrap=document.getElementById('detailFieldsWrap');
+  const btn=document.getElementById('detailFieldsBtn');
+  if(!wrap)return;
+  wrap.style.display='block';
+  if(btn)btn.querySelector('span').textContent='▲ 詳細項目を閉じる';
 }
 
 function updateSpeciesTagCheck(){}
