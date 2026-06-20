@@ -645,19 +645,18 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">累代</label>
-          <select class="form-select" id="inputGenType" onchange="updateGenInput()">
+          <label class="form-label">累代・種別</label>
+          <select class="form-select" id="inputGenType">
             <option value="">不明</option>
             <option value="WD">WD（野生個体）</option>
             <option value="CB">CB（人工繁殖）</option>
             <option value="FH">FH（ファームハッチ）</option>
             <option value="LH">LH（長期飼育）</option>
-            <option value="F">F（世代数を入力）</option>
           </select>
         </div>
-        <div class="form-group" id="genNumGroup" style="display:none">
-          <label class="form-label">世代数</label>
-          <input class="form-input" id="inputGenNum" type="number" placeholder="例）1" min="1">
+        <div class="form-group">
+          <label class="form-label">世代数（任意）</label>
+          <input class="form-input" id="inputGenNum" placeholder="例）1・2・3">
         </div>
       </div>
       <div class="form-group">
@@ -2950,13 +2949,16 @@ function openEditModal(id){
   document.getElementById('inputMemo').value=a.memo||'';
   // 累代
   if(a.generation){
+    const parts=a.generation.split(' ');
     const genType=document.getElementById('inputGenType');
-    if(genType){
-      if(a.generation.startsWith('F')&&a.generation.length>1){
-        genType.value='F';
-        document.getElementById('inputGenNum').value=a.generation.slice(1);
-        document.getElementById('genNumGroup').style.display='block';
-      }else{genType.value=a.generation;}
+    const genNum=document.getElementById('inputGenNum');
+    if(genType&&genNum){
+      // 種別部分（WD/CB/FH/LH）
+      const typeVal=parts.find(p=>['WD','CB','FH','LH'].includes(p))||'';
+      genType.value=typeVal;
+      // 世代数部分（F1→1）
+      const fPart=parts.find(p=>p.startsWith('F')&&p.length>1);
+      genNum.value=fPart?fPart.slice(1):'';
     }
   }
   if(document.getElementById('inputLocality'))document.getElementById('inputLocality').value=a.locality||'';
@@ -2996,15 +2998,14 @@ function clearForm(){
   closeDetailFields();
   if(document.getElementById('inputGenType'))document.getElementById('inputGenType').value='';
   if(document.getElementById('inputGenNum'))document.getElementById('inputGenNum').value='';
-  if(document.getElementById('genNumGroup'))document.getElementById('genNumGroup').style.display='none';
   if(document.getElementById('inputLocality'))document.getElementById('inputLocality').value='';
   if(document.getElementById('inputBloodline'))document.getElementById('inputBloodline').value='';
 }
 
 function saveAnimal(){
   const genType=document.getElementById('inputGenType')?.value||'';
-  const genNum=document.getElementById('inputGenNum')?.value||'';
-  const generation=genType==='F'?`F${genNum}`:genType;
+  const genNum=document.getElementById('inputGenNum')?.value.trim()||'';
+  const generation=[genType,genNum?`F${genNum}`:''].filter(Boolean).join(' ');
   const data={name:document.getElementById('inputName').value.trim(),species:document.getElementById('inputSpecies').value.trim(),category:document.getElementById('inputCategory').value,role:document.getElementById('inputRole')?.value||'pet',sex:currentSex,photo:photoData,morphs:[...morphTags],hets:[...hetTags],userTags:[...currentAnimalUserTags],weight:document.getElementById('inputWeight').value,length:document.getElementById('inputLength').value,acquiredDate:document.getElementById('inputAcquiredDate').value,acquiredFrom:document.getElementById('inputAcquiredFrom').value.trim(),memo:document.getElementById('inputMemo').value.trim(),generation,locality:document.getElementById('inputLocality')?.value.trim()||'',bloodline:document.getElementById('inputBloodline')?.value.trim()||''};
   if(data.species&&!DB.masters.species.includes(data.species))DB.masters.species.push(data.species);
   data.morphs.forEach(m=>{if(!DB.masters.morphs.includes(m))DB.masters.morphs.push(m);});
