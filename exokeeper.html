@@ -508,9 +508,6 @@
     <div class="settings-hint">生体登録時に表示する項目を選べます。使わない項目は非表示にするとフォームがすっきりします。</div>
     <div id="formFieldSettings"></div>
 
-    <div class="section-title">役割タグ</div>
-    <div class="settings-hint">フィルターに表示する役割タグを管理します。</div>
-    <div id="roleTagList"></div>
 
     <div class="section-title">分類タグ</div>
     <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
@@ -610,15 +607,6 @@
           <option value="other">🔮 その他</option>
         </select>
       </div>
-      <div class="form-group">
-        <label class="form-label">役割</label>
-        <select class="form-select" id="inputRole">
-          <option value="pet">🐾 ペット</option>
-          <option value="feeder">🍖 餌用</option>
-          <option value="breed">🥚 繁殖</option>
-        </select>
-      </div>
-    </div>
     <div class="form-group">
       <label class="form-label">性別</label>
       <div class="seg-ctrl">
@@ -2642,7 +2630,6 @@ function renderAnimals(){
         <div class="animal-card-species">${a.species||'種名未登録'}${a.sex?' '+a.sex:''}${a.generation?' · '+a.generation:''}</div>
         ${a.morphs?.length?`<div class="animal-card-species" style="color:var(--accent)">${a.morphs.join(' / ')}</div>`:''}
         <div class="animal-card-tags">
-          <span class="tag tag-${a.role}">${ROLE_EMOJI[a.role]} ${ROLE_LABEL[a.role]}</span>
           <span class="tag tag-${a.category}">${CAT_EMOJI[a.category]} ${CAT_LABEL[a.category]}</span>
           ${utagHtml}
         </div>
@@ -2662,7 +2649,6 @@ function showDetail(id,tab){
   const rows=[
     ['性別',a.sex||'不明'],
     ['分類',`${CAT_EMOJI[a.category]} ${CAT_LABEL[a.category]}`],
-    ['役割',`${ROLE_EMOJI[a.role]} ${ROLE_LABEL[a.role]}`],
     a.generation  ?['累代',a.generation]          :null,
     a.locality    ?['産地',a.locality]            :null,
     a.bloodline   ?['血統名',a.bloodline]          :null,
@@ -2727,7 +2713,6 @@ function showDetail(id,tab){
       <div class="detail-name">${a.name||'名前なし'}</div>
       <div class="detail-species">${a.species||'種名未登録'}${a.sex?' '+a.sex:''}</div>
       <div class="detail-tags">
-        <span class="tag tag-${a.role}">${ROLE_EMOJI[a.role]} ${ROLE_LABEL[a.role]}</span>
         <span class="tag tag-${a.category}">${CAT_EMOJI[a.category]} ${CAT_LABEL[a.category]}</span>
       </div>
       <div class="detail-tabs">
