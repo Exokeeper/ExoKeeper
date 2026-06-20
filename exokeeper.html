@@ -504,6 +504,10 @@
       <div class="theme-grid" id="themeGrid"></div>
     </div>
 
+    <div class="section-title">登録フォームの表示項目</div>
+    <div class="settings-hint">生体登録時に表示する項目を選べます。使わない項目は非表示にするとフォームがすっきりします。</div>
+    <div id="formFieldSettings"></div>
+
     <div class="section-title">役割タグ</div>
     <div class="settings-hint">フィルターに表示する役割タグを管理します。</div>
     <div id="roleTagList"></div>
@@ -642,6 +646,31 @@
           onkeydown="handleTagKey(event,'hetInput','hetWrap','hets','hetSug')">
       </div>
       <div class="tag-suggestions" id="hetSug"></div>
+    </div>
+    <div class="form-row" id="formField-generation" style="display:none">
+      <div class="form-group">
+        <label class="form-label">累代</label>
+        <select class="form-select" id="inputGenType" onchange="updateGenInput()">
+          <option value="">不明</option>
+          <option value="WD">WD（野生個体）</option>
+          <option value="CB">CB（人工繁殖）</option>
+          <option value="FH">FH（ファームハッチ）</option>
+          <option value="LH">LH（長期飼育）</option>
+          <option value="F">F（世代数を入力）</option>
+        </select>
+      </div>
+      <div class="form-group" id="genNumGroup" style="display:none">
+        <label class="form-label">世代数</label>
+        <input class="form-input" id="inputGenNum" type="number" placeholder="例）1" min="1">
+      </div>
+    </div>
+    <div class="form-group" id="formField-locality" style="display:none">
+      <label class="form-label">産地（任意）</label>
+      <input class="form-input" id="inputLocality" placeholder="例）山梨県・スマトラ島">
+    </div>
+    <div class="form-group" id="formField-bloodline" style="display:none">
+      <label class="form-label">血統名（任意）</label>
+      <input class="form-input" id="inputBloodline" placeholder="例）○○血統">
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -1095,7 +1124,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,roleTags:DB.roleTags,
+      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1126,6 +1155,7 @@ async function loadFromCloud(){
   DB.roleTags=d.roleTags||[
     {id:'pet',show:true},{id:'feeder',show:true},{id:'breed',show:true},
   ];
+  DB.formFields=d.formFields||null;
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1138,7 +1168,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1267,9 +1297,60 @@ function renderSettings(){
         <span style="font-size:10px;color:${t.accent};font-weight:700">${t.label}</span>
       </div>`).join('');
   }
+  renderFormFieldSettings();
   renderRoleTagList();
   renderCatTagList();
   renderUserTagList();
+}
+
+function renderFormFieldSettings(){
+  const el=document.getElementById('formFieldSettings');
+  if(!el||!DB.formFields)return;
+  const fields=[
+    {key:'generation',label:'累代（WD/CB/FH/F○など）'},
+    {key:'locality',label:'産地'},
+    {key:'bloodline',label:'血統名'},
+    {key:'morph',label:'モルフ・ヘテロ'},
+    {key:'weight',label:'体重・全長'},
+    {key:'acquired',label:'入手日・入手元'},
+    {key:'memo',label:'メモ'},
+  ];
+  el.innerHTML=fields.map(f=>`
+    <div class="user-tag-row">
+      <div class="user-tag-name">${f.label}</div>
+      <button class="user-tag-toggle ${DB.formFields[f.key]?'on':'off'}" onclick="toggleFormField('${f.key}')"></button>
+    </div>`).join('');
+}
+
+function toggleFormField(key){
+  DB.formFields[key]=!DB.formFields[key];
+  saveDB();renderFormFieldSettings();applyFormFields();
+}
+
+function applyFormFields(){
+  if(!DB.formFields)return;
+  const fields={
+    generation:'formField-generation',
+    locality:'formField-locality',
+    bloodline:'formField-bloodline',
+  };
+  Object.entries(fields).forEach(([key,id])=>{
+    const el=document.getElementById(id);
+    if(el)el.style.display=DB.formFields[key]?'':'none';
+  });
+  // モルフ・ヘテロ
+  ['morphWrap','hetWrap'].forEach(id=>{
+    const el=document.getElementById(id)?.closest('.form-group');
+    if(el)el.style.display=DB.formFields.morph?'':'none';
+  });
+  document.querySelectorAll('.form-hint').forEach(el=>{
+    el.style.display=DB.formFields.morph?'':'none';
+  });
+}
+
+function updateGenInput(){
+  const type=document.getElementById('inputGenType').value;
+  document.getElementById('genNumGroup').style.display=type==='F'?'block':'none';
 }
 
 function renderRoleTagList(){
@@ -2558,7 +2639,8 @@ function renderAnimals(){
       <div class="animal-card-photo">${a.photo?`<img src="${a.photo}" alt="">`:CAT_EMOJI[a.category]||'🔮'}</div>
       <div class="animal-card-body">
         <div class="animal-card-name">${a.name||'名前なし'}</div>
-        <div class="animal-card-species">${a.species||'種名未登録'}</div>
+        <div class="animal-card-species">${a.species||'種名未登録'}${a.sex?' '+a.sex:''}${a.generation?' · '+a.generation:''}</div>
+        ${a.morphs?.length?`<div class="animal-card-species" style="color:var(--accent)">${a.morphs.join(' / ')}</div>`:''}
         <div class="animal-card-tags">
           <span class="tag tag-${a.role}">${ROLE_EMOJI[a.role]} ${ROLE_LABEL[a.role]}</span>
           <span class="tag tag-${a.category}">${CAT_EMOJI[a.category]} ${CAT_LABEL[a.category]}</span>
@@ -2581,8 +2663,11 @@ function showDetail(id,tab){
     ['性別',a.sex||'不明'],
     ['分類',`${CAT_EMOJI[a.category]} ${CAT_LABEL[a.category]}`],
     ['役割',`${ROLE_EMOJI[a.role]} ${ROLE_LABEL[a.role]}`],
-    a.acquiredDate?['入手日',a.acquiredDate]:null,
-    a.acquiredFrom?['入手元',a.acquiredFrom]:null,
+    a.generation  ?['累代',a.generation]          :null,
+    a.locality    ?['産地',a.locality]            :null,
+    a.bloodline   ?['血統名',a.bloodline]          :null,
+    a.acquiredDate?['入手日',a.acquiredDate]       :null,
+    a.acquiredFrom?['入手元',a.acquiredFrom]       :null,
   ].filter(Boolean);
 
   const feedings=DB.feedings.filter(f=>f.animalId===id).sort((a,b)=>b.datetime.localeCompare(a.datetime));
@@ -2851,6 +2936,7 @@ function openAddModal(){
   clearForm();document.getElementById('deleteBtn').innerHTML='';
   renderUserTagCheckboxes([]);
   renderSpeciesTagSelectList();
+  applyFormFields();
   document.getElementById('animalModal').classList.add('open');
 }
 
@@ -2896,7 +2982,10 @@ function clearForm(){
 }
 
 function saveAnimal(){
-  const data={name:document.getElementById('inputName').value.trim(),species:document.getElementById('inputSpecies').value.trim(),category:document.getElementById('inputCategory').value,role:document.getElementById('inputRole').value,sex:currentSex,photo:photoData,morphs:[...morphTags],hets:[...hetTags],userTags:[...currentAnimalUserTags],weight:document.getElementById('inputWeight').value,length:document.getElementById('inputLength').value,acquiredDate:document.getElementById('inputAcquiredDate').value,acquiredFrom:document.getElementById('inputAcquiredFrom').value.trim(),memo:document.getElementById('inputMemo').value.trim()};
+  const genType=document.getElementById('inputGenType')?.value||'';
+  const genNum=document.getElementById('inputGenNum')?.value||'';
+  const generation=genType==='F'?`F${genNum}`:genType;
+  const data={name:document.getElementById('inputName').value.trim(),species:document.getElementById('inputSpecies').value.trim(),category:document.getElementById('inputCategory').value,role:document.getElementById('inputRole').value,sex:currentSex,photo:photoData,morphs:[...morphTags],hets:[...hetTags],userTags:[...currentAnimalUserTags],weight:document.getElementById('inputWeight').value,length:document.getElementById('inputLength').value,acquiredDate:document.getElementById('inputAcquiredDate').value,acquiredFrom:document.getElementById('inputAcquiredFrom').value.trim(),memo:document.getElementById('inputMemo').value.trim(),generation,locality:document.getElementById('inputLocality')?.value.trim()||'',bloodline:document.getElementById('inputBloodline')?.value.trim()||''};
   if(data.species&&!DB.masters.species.includes(data.species))DB.masters.species.push(data.species);
   data.morphs.forEach(m=>{if(!DB.masters.morphs.includes(m))DB.masters.morphs.push(m);});
   data.hets.forEach(h=>{if(!DB.masters.hets.includes(h))DB.masters.hets.push(h);});
@@ -3057,6 +3146,12 @@ async function initApp(user){
     DB.roleTags=[
       {id:'pet',show:true},{id:'feeder',show:true},{id:'breed',show:true},
     ];
+  }
+  if(!DB.formFields){
+    DB.formFields={
+      generation:false, locality:false, bloodline:false,
+      morph:true, weight:true, acquired:true, memo:true,
+    };
   }
   initTheme();renderHome();renderAnimals();
   if('Notification' in window && Notification.permission==='granted'){
