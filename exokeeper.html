@@ -1017,6 +1017,72 @@
   </div>
 </div>
 
+<!-- ── Bulk Register Modal ── -->
+<div class="modal-overlay" id="bulkRegModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">子個体を一括登録</div>
+
+    <div class="form-group">
+      <label class="form-label">登録する匹数</label>
+      <input class="form-input" id="bulkCount" type="number" placeholder="例）10" min="1" max="200">
+    </div>
+    <div class="form-group">
+      <label class="form-label">種名</label>
+      <input class="form-input" id="bulkSpecies" placeholder="例）オオクワガタ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">分類</label>
+      <select class="form-select" id="bulkCategory">
+        <option value="reptile">🦎 爬虫類</option>
+        <option value="amphibian">🐸 両生類</option>
+        <option value="arthropod">🕷️ 節足動物</option>
+        <option value="mammal">🐭 哺乳類</option>
+        <option value="bird">🐦 鳥類</option>
+        <option value="fish">🐟 魚類</option>
+        <option value="other">🔮 その他</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">累代・種別</label>
+        <select class="form-select" id="bulkGenType">
+          <option value="">不明</option>
+          <option value="WD">WD</option>
+          <option value="CB">CB</option>
+          <option value="FH">FH</option>
+          <option value="LH">LH</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">世代数（任意）</label>
+        <input class="form-input" id="bulkGenNum" placeholder="例）1">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">産地（任意）</label>
+      <input class="form-input" id="bulkLocality" placeholder="例）山梨県">
+    </div>
+    <div class="form-group">
+      <label class="form-label">血統名（任意）</label>
+      <input class="form-input" id="bulkBloodline" placeholder="例）○○血統">
+    </div>
+    <div class="form-group">
+      <label class="form-label">入手日（孵化日）</label>
+      <input class="form-input" id="bulkDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">ナンバリングの開始番号</label>
+      <input class="form-input" id="bulkStartNum" type="number" value="1" min="1">
+    </div>
+    <div id="bulkPreview" style="background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--text2);margin-bottom:16px"></div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('bulkRegModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveBulkRegister()">一括登録する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Health Modal ── -->
 <div class="modal-overlay" id="healthModal">
   <div class="modal">
@@ -1693,6 +1759,104 @@ function closePhotoViewer(){
   document.querySelector('.photo-viewer-del').style.display='';
 }
 
+// ── 一括登録 ──
+function openBulkRegModal(sessionId,eventId){
+  const session=DB.breedSessions.find(x=>x.id===sessionId);
+  const event  =DB.breedEvents.find(x=>x.id===eventId);
+  if(!session||!event)return;
+
+  const sire=session.sireId?DB.animals.find(x=>x.id===session.sireId):null;
+  const dam =session.damId ?DB.animals.find(x=>x.id===session.damId) :null;
+  const species=dam?.species||sire?.species||'';
+  const category=dam?.category||sire?.category||'reptile';
+  const locality=dam?.locality||sire?.locality||'';
+
+  // 累代の自動提案
+  const sireGen=sire?.generation||'';
+  const damGen =dam?.generation||'';
+  let suggestGenType='CB';
+  let suggestGenNum='';
+  if(sireGen.includes('WD')||damGen.includes('WD'))suggestGenType='WD';
+  const fMatch=(sireGen+damGen).match(/F(\d+)/);
+  if(fMatch)suggestGenNum=String(parseInt(fMatch[1])+1);
+  else if(suggestGenType==='CB')suggestGenNum='1';
+
+  document.getElementById('bulkCount').value=event.count?parseInt(event.count)||'':'';
+  document.getElementById('bulkSpecies').value=species;
+  document.getElementById('bulkCategory').value=category;
+  document.getElementById('bulkGenType').value=suggestGenType;
+  document.getElementById('bulkGenNum').value=suggestGenNum;
+  document.getElementById('bulkLocality').value=locality;
+  document.getElementById('bulkBloodline').value='';
+  document.getElementById('bulkDate').value=event.date;
+  document.getElementById('bulkStartNum').value='1';
+
+  // 既存の同種個体のナンバリング最大値を確認
+  const existing=DB.animals.filter(a=>a.species===species&&a.name?.match(/#(\d+)$/));
+  const maxNum=existing.reduce((m,a)=>{
+    const n=parseInt(a.name.match(/#(\d+)$/)?.[1]||0);
+    return Math.max(m,n);
+  },0);
+  if(maxNum>0)document.getElementById('bulkStartNum').value=maxNum+1;
+
+  updateBulkPreview();
+
+  // preview更新イベント
+  ['bulkCount','bulkSpecies','bulkStartNum'].forEach(id=>{
+    document.getElementById(id).oninput=updateBulkPreview;
+  });
+
+  // sessionId・eventIdを保存
+  document.getElementById('bulkRegModal').dataset.sessionId=sessionId;
+  document.getElementById('bulkRegModal').dataset.eventId=eventId;
+  document.getElementById('bulkRegModal').classList.add('open');
+}
+
+function updateBulkPreview(){
+  const count=parseInt(document.getElementById('bulkCount').value)||0;
+  const species=document.getElementById('bulkSpecies').value.trim()||'個体';
+  const start=parseInt(document.getElementById('bulkStartNum').value)||1;
+  const el=document.getElementById('bulkPreview');
+  if(!count){el.textContent='匹数を入力してください';return;}
+  const preview=[];
+  for(let i=0;i<Math.min(count,5);i++)preview.push(`${species} #${start+i}`);
+  if(count>5)preview.push(`… 計${count}匹`);
+  el.textContent='登録される個体：'+preview.join('、');
+}
+
+function saveBulkRegister(){
+  const count=parseInt(document.getElementById('bulkCount').value)||0;
+  if(!count||count<1){alert('匹数を入力してください');return;}
+  if(count>200){alert('一度に登録できるのは200匹までです');return;}
+
+  const species=document.getElementById('bulkSpecies').value.trim();
+  const category=document.getElementById('bulkCategory').value;
+  const genType=document.getElementById('bulkGenType').value;
+  const genNum=document.getElementById('bulkGenNum').value.trim();
+  const generation=[genType,genNum?`F${genNum}`:''].filter(Boolean).join(' ');
+  const locality=document.getElementById('bulkLocality').value.trim();
+  const bloodline=document.getElementById('bulkBloodline').value.trim();
+  const acquiredDate=document.getElementById('bulkDate').value;
+  const start=parseInt(document.getElementById('bulkStartNum').value)||1;
+
+  for(let i=0;i<count;i++){
+    DB.animals.push({
+      id:DB.nextId++,
+      name:`${species} #${start+i}`,
+      species,category,
+      sex:'',photo:null,morphs:[],hets:[],userTags:[],
+      generation,locality,bloodline,
+      acquiredDate,acquiredFrom:'自家繁殖',
+      memo:'',weight:'',length:'',
+    });
+  }
+  if(species&&!DB.masters.species.includes(species))DB.masters.species.push(species);
+  saveDB();
+  closeModal('bulkRegModal');
+  alert(`${count}匹を登録しました！`);
+  renderAnimals();renderHome();
+}
+
 // ─── Breeding ─────────────────────────────────────
 const BREED_EVENT_EMOJI={
   '交尾確認':'💑','産卵セット投入':'🥚','産卵確認':'🪺',
@@ -1731,7 +1895,7 @@ function buildBreedSessionCard(s){
         ${e.photo?`<img src="${e.photo}" class="breed-event-photo" onclick="openBreedEventPhotoViewer('${e.photo}')">`:''}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBreedEventModalEdit(${e.id})">✏️ 編集</button>
-          ${isHatch?`<button class="btn btn-success" style="padding:6px 10px;font-size:12px;width:auto" onclick="registerOffspring(${s.id},${e.id})">🐣 子個体を登録</button>`:''}
+          ${isHatch?`<button class="btn btn-success" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBulkRegModal(${s.id},${e.id})">🐣 子個体を一括登録</button>`:''}
         </div>
       </div>
     </div>`;
@@ -2103,7 +2267,7 @@ function buildBreedSessionCardForPage(s){
         ${e.photo?`<img src="${e.photo}" class="breed-event-photo" onclick="openBreedEventPhotoViewer('${e.photo}')">`:''}
         <div style="display:flex;gap:6px;margin-top:8px">
           <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBreedEventModalEdit(${e.id})">✏️ 編集</button>
-          ${isHatch?`<button class="btn btn-success" style="padding:6px 10px;font-size:12px;width:auto" onclick="registerOffspring(${s.id},${e.id})">🐣 子個体を登録</button>`:''}
+          ${isHatch?`<button class="btn btn-success" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBulkRegModal(${s.id},${e.id})">🐣 子個体を一括登録</button>`:''}
         </div>
       </div>
     </div>`;
