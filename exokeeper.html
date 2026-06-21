@@ -2150,12 +2150,13 @@ function buildBreedFilters(){
   }
 }
 function openBreedSessionModalFromPage(){
-  currentAnimalId=null;editingBreedSessionId=null;
+  currentAnimalId=null;editingBreedSessionId=null;currentBreedUserTags=[];
   document.getElementById('breedSessionModalTitle').textContent='繁殖記録を開始';
   document.getElementById('breedSessionTitle').value='';
   document.getElementById('breedSessionMemo').value='';
   document.getElementById('breedSessionDeleteBtn').innerHTML='';
   populateBreedParentSelects(null,null,null);
+  renderBreedSessionTagCheckboxes([]);
   document.getElementById('breedSessionModal').classList.add('open');
 }
 
@@ -2659,7 +2660,11 @@ function openTaskModal(){
   document.getElementById('taskMonthDay').value='';
   document.getElementById('taskDeleteBtn').innerHTML='';
   populateAnimalSelect();
-  setTaskRepeat('daily',document.querySelector('[data-repeat="daily"]'));
+  taskRepeat='daily';
+  document.querySelectorAll('#taskRepeatSeg .seg-btn').forEach(b=>{
+    b.classList.toggle('active',b.dataset.repeat==='daily');
+  });
+  updateRepeatUI('daily');
   document.querySelectorAll('.day-chip').forEach(c=>c.classList.remove('active'));
   document.getElementById('taskModal').classList.add('open');
 }
