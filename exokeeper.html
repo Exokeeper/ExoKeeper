@@ -1145,6 +1145,19 @@
   </div>
 </div>
 
+
+<!-- ── Archive Modal ── -->
+<div class="modal-overlay" id="archiveModal">
+  <div class="modal-sheet">
+    <div class="modal-title">アーカイブする理由</div>
+    <div style="margin-bottom:20px;color:var(--text2);font-size:13px;text-align:center" id="archiveModalAnimalName"></div>
+    <button class="btn" style="margin-bottom:10px;background:var(--surface2);border:1px solid var(--border)" onclick="doArchive('死亡')">死亡</button>
+    <button class="btn" style="margin-bottom:10px;background:var(--surface2);border:1px solid var(--border)" onclick="doArchive('譲渡')">譲渡</button>
+    <button class="btn" style="margin-bottom:10px;background:var(--surface2);border:1px solid var(--border)" onclick="doArchive('販売済み')">販売済み</button>
+    <button class="btn btn-ghost" onclick="closeModal('archiveModal')">キャンセル</button>
+  </div>
+</div>
+
 <!-- ── Photo viewer ── -->
 <div class="photo-viewer" id="photoViewer">
   <button class="photo-viewer-close" onclick="closePhotoViewer()">✕</button>
@@ -3348,23 +3361,29 @@ function saveAnimal(){
 
 
 // ─── Archive ──────────────────────────────────────
+let archivingId=null;
 function openArchiveDialog(id){
   const a=DB.animals.find(x=>x.id===id);
   if(!a)return;
-  const name=a.name||'名前なし';
-  const reason=prompt(`「${name}」をアーカイブします。\n理由を選んでください:\n1: 死亡\n2: 譲渡\n3: 販売済み\n\n番号を入力してください（1/2/3）`);
-  const reasonMap={'1':'死亡','2':'譲渡','3':'販売済み'};
-  if(!reason||!reasonMap[reason.trim()])return;
-  const idx=DB.animals.findIndex(x=>x.id===id);
+  archivingId=id;
+  document.getElementById('archiveModalAnimalName').textContent=`「${a.name||'名前なし'}」をアーカイブします`;
+  document.getElementById('archiveModal').classList.add('open');
+}
+
+function doArchive(reason){
+  if(!archivingId)return;
+  const idx=DB.animals.findIndex(x=>x.id===archivingId);
+  const name=DB.animals[idx]?.name||'名前なし';
   if(idx>-1){
     DB.animals[idx].archived=true;
-    DB.animals[idx].archiveReason=reasonMap[reason.trim()];
+    DB.animals[idx].archiveReason=reason;
     DB.animals[idx].archivedAt=new Date().toISOString();
   }
   saveDB();
+  closeModal('archiveModal');
   closeModal('animalModal');
   renderAnimals();renderHome();
-  alert(`「${name}」を「${reasonMap[reason.trim()]}」としてアーカイブしました。`);
+  archivingId=null;
 }
 
 function unarchiveAnimal(id){
