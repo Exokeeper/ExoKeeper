@@ -1297,11 +1297,12 @@ function showPage(name,tabEl,filter){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   if(tabEl)tabEl.classList.add('active');
-  document.getElementById('fab').style.display=(name==='animals'||name==='tasks'||name==='shop'||name==='breeding')?'flex':'none';
+  document.getElementById('fab').style.display=(name==='animals'||name==='tasks'||name==='shop'||name==='breeding'||name==='feedlog')?'flex':'none';
   if(name==='animals')document.getElementById('fab').onclick=openAddModal;
   if(name==='tasks')document.getElementById('fab').onclick=openTaskModal;
   if(name==='shop')document.getElementById('fab').onclick=()=>currentShopTab==='list'?openShopItemModal():openShopRegModal();
   if(name==='breeding')document.getElementById('fab').onclick=openBreedSessionModalFromPage;
+  if(name==='feedlog')document.getElementById('fab').onclick=openFeedModalFromLog;
   if(name==='home'){renderHome();}
   if(name==='animals'){if(filter)setFilterDirect(filter);renderAnimals();}
   if(name==='feedlog'){renderFeedLog();}
