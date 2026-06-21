@@ -339,6 +339,8 @@
   .photo-viewer-date{color:var(--text2);font-size:13px;}
   .photo-viewer-del{background:var(--danger);color:#fff;border:none;padding:10px 24px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;}
 
+  .settings-section-header{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:8px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:15px;transition:border-color 0.15s;}
+  .settings-section-header:hover{border-color:var(--accent);}
   .back-btn{background:none;border:none;color:var(--accent);font-size:15px;cursor:pointer;padding:0;display:flex;align-items:center;gap:4px;}
 </style>
 </head>
@@ -384,7 +386,7 @@
 
   <!-- HOME -->
   <div class="page active" id="page-home">
-    <div class="menu-grid">
+    <div class="menu-grid" id="homeMenuGrid">
       <div class="menu-card" onclick="showPage('animals',document.querySelectorAll('.tab')[1])">
         <div class="menu-card-icon">🐾</div><div class="menu-card-label">生体一覧</div>
       </div>
@@ -425,7 +427,10 @@
 
   <!-- FEED LOG -->
   <div class="page" id="page-feedlog">
-    <div class="section-title" style="margin-top:0">給餌ログ</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <div class="section-title" style="margin-top:0;margin-bottom:0">給餌ログ</div>
+      <button class="btn btn-success" style="width:auto;padding:8px 14px;font-size:13px" onclick="openFeedModalFromLog()">＋ 給餌を記録</button>
+    </div>
     <div id="feedLogList"></div>
   </div>
 
@@ -457,7 +462,7 @@
     <div id="breedingLogEmpty" class="empty-state" style="display:none">
       <div class="empty-state-icon">🥚</div>
       <div class="empty-state-title">繁殖記録がありません</div>
-      <div class="empty-state-desc">右下の＋ボタンから繁殖記録を開始しましょう</div>
+      <div class="empty-state-desc">右下の＋ボタンで繁殖ペアを登録してください。<br>登録後にイベント（交尾・産卵・孵化など）を追加できます。</div>
     </div>
   </div>
 
@@ -499,24 +504,41 @@
 
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
-    <div class="section-title" style="margin-top:0">テーマカラー</div>
-    <div class="settings-card">
-      <div class="theme-grid" id="themeGrid"></div>
+
+    <div class="settings-section-header" onclick="toggleSettingsSection('theme')">
+      🎨 テーマカラー <span id="settings-arrow-theme">▼</span>
+    </div>
+    <div id="settings-body-theme">
+      <div class="settings-card">
+        <div class="theme-grid" id="themeGrid"></div>
+      </div>
     </div>
 
-    <div class="section-title">登録フォームの表示項目</div>
-    <div class="settings-hint">生体登録時に表示する項目を選べます。使わない項目は非表示にするとフォームがすっきりします。</div>
-    <div id="formFieldSettings"></div>
+    <div class="settings-section-header" onclick="toggleSettingsSection('menu')">
+      🏠 ホームメニュー <span id="settings-arrow-menu">▼</span>
+    </div>
+    <div id="settings-body-menu" style="display:none">
+      <div class="settings-hint">表示するメニューと順番を管理します。▲▼で並べ替えできます。</div>
+      <div id="homeMenuSettings"></div>
+    </div>
 
+    <div class="settings-section-header" onclick="toggleSettingsSection('cattag')">
+      🏷️ 分類タグ <span id="settings-arrow-cattag">▼</span>
+    </div>
+    <div id="settings-body-cattag" style="display:none">
+      <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
+      <div id="catTagList"></div>
+    </div>
 
-    <div class="section-title">分類タグ</div>
-    <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
-    <div id="catTagList"></div>
+    <div class="settings-section-header" onclick="toggleSettingsSection('usertag')">
+      🔖 ユーザータグ <span id="settings-arrow-usertag">▼</span>
+    </div>
+    <div id="settings-body-usertag" style="display:none">
+      <div class="settings-hint">生体や繁殖ログに付けられる独自タグを管理します。</div>
+      <div id="userTagList"></div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ タグを追加</button>
+    </div>
 
-    <div class="section-title">ユーザータグ</div>
-    <div class="settings-hint">生体や繁殖ログに付けられる独自タグを管理します。フィルターに表示するかも選べます。</div>
-    <div id="userTagList"></div>
-    <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ タグを追加</button>
   </div>
 
 </div>
@@ -1120,7 +1142,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,
+      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1152,6 +1174,7 @@ async function loadFromCloud(){
     {id:'pet',show:true},{id:'feeder',show:true},{id:'breed',show:true},
   ];
   DB.formFields=d.formFields||null;
+  DB.homeMenu=d.homeMenu||null;
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1164,7 +1187,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1224,6 +1247,23 @@ function showPage(name,tabEl,filter){
 
 // ─── Home ─────────────────────────────────────────
 function renderHome(){
+  // ホームメニューを動的生成
+  const menuGrid=document.getElementById('homeMenuGrid');
+  if(menuGrid&&DB.homeMenu){
+    const tabMap={
+      animals:1, feedlog:2, tasks:3, shop:null, breeding:null,
+    };
+    menuGrid.innerHTML=DB.homeMenu.filter(m=>m.show).map(m=>{
+      const tabIdx=tabMap[m.id];
+      const onclick=tabIdx!==undefined&&tabIdx!==null
+        ?`showPage('${m.id}',document.querySelectorAll('.tab')[${tabIdx}])`
+        :`showPage('${m.id}',null)`;
+      return`<div class="menu-card" onclick="${onclick}">
+        <div class="menu-card-icon">${m.icon}</div>
+        <div class="menu-card-label">${m.label}</div>
+      </div>`;
+    }).join('');
+  }
   const todayTasks=getTodayTasks();
   const sec=document.getElementById('todayTaskSection');
   const list=document.getElementById('todayTaskList');
@@ -1264,6 +1304,78 @@ function toggleTodayDone(taskId,key){
   renderHome();
 }
 
+// ── 設定セクション折りたたみ ──
+function toggleSettingsSection(id){
+  const body=document.getElementById('settings-body-'+id);
+  const arrow=document.getElementById('settings-arrow-'+id);
+  if(!body)return;
+  const open=body.style.display==='none'||body.style.display==='';
+  body.style.display=open?'block':'none';
+  if(arrow)arrow.textContent=open?'▲':'▼';
+}
+
+// ── ホームメニュー設定 ──
+function renderHomeMenuSettings(){
+  const el=document.getElementById('homeMenuSettings');
+  if(!el||!DB.homeMenu)return;
+  el.innerHTML=DB.homeMenu.map((m,i)=>`
+    <div class="user-tag-row">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveHomeMenu(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:12px;padding:0;line-height:1" onclick="moveHomeMenu(${i},1)" ${i===DB.homeMenu.length-1?'disabled':''}>▼</button>
+      </div>
+      <div class="user-tag-dot" style="background:var(--accent)">${m.icon}</div>
+      <div class="user-tag-name">${m.label}</div>
+      <button class="user-tag-toggle ${m.show?'on':'off'}" onclick="toggleHomeMenu(${i})"></button>
+    </div>`).join('');
+}
+
+function toggleHomeMenu(i){
+  DB.homeMenu[i].show=!DB.homeMenu[i].show;
+  saveDB();renderHomeMenuSettings();renderHome();
+}
+
+function moveHomeMenu(i,dir){
+  const newI=i+dir;
+  if(newI<0||newI>=DB.homeMenu.length)return;
+  const tmp=DB.homeMenu[i];DB.homeMenu[i]=DB.homeMenu[newI];DB.homeMenu[newI]=tmp;
+  saveDB();renderHomeMenuSettings();renderHome();
+}
+
+// ── 給餌ログページからの給餌記録 ──
+function openFeedModalFromLog(){
+  // 個体選択モーダルを出すか、最後に給餌した個体をデフォルトにする
+  const lastFeeding=[...DB.feedings].sort((a,b)=>b.datetime.localeCompare(a.datetime))[0];
+  const animalId=lastFeeding?.animalId||DB.animals[0]?.id;
+  if(!animalId){alert('先に生体を登録してください');return;}
+  currentAnimalId=animalId;
+  const last=DB.feedings.filter(f=>f.animalId===animalId).sort((a,b)=>b.datetime.localeCompare(a.datetime))[0];
+  const now=new Date();now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
+  document.getElementById('feedDatetime').value=now.toISOString().slice(0,16);
+  document.getElementById('feedFood').value=last?last.food:'';
+  document.getElementById('feedAmount').value=last?last.amount:'';
+  document.getElementById('feedResult').value='';
+  document.getElementById('feedMemo').value='';
+  // 個体選択セレクトを追加
+  const modal=document.getElementById('feedModal');
+  let animalSel=document.getElementById('feedAnimalSelect');
+  if(!animalSel){
+    const group=document.createElement('div');
+    group.className='form-group';
+    group.innerHTML=`<label class="form-label">個体</label><select class="form-select" id="feedAnimalSelect"></select>`;
+    modal.querySelector('.modal').insertBefore(group,modal.querySelector('.form-group'));
+  }
+  animalSel=document.getElementById('feedAnimalSelect');
+  animalSel.innerHTML=DB.animals.map(a=>`<option value="${a.id}">${a.name||a.species||'名前なし'}</option>`).join('');
+  animalSel.value=animalId;
+  animalSel.onchange=()=>{
+    currentAnimalId=parseInt(animalSel.value);
+    const l=DB.feedings.filter(f=>f.animalId===currentAnimalId).sort((a,b)=>b.datetime.localeCompare(a.datetime))[0];
+    if(l){document.getElementById('feedFood').value=l.food;document.getElementById('feedAmount').value=l.amount||'';}
+  };
+  document.getElementById('feedModal').classList.add('open');
+}
+
 // ─── Settings ─────────────────────────────────────
 const THEMES=[
   {id:'blue',  label:'ブルー',  accent:'#5b8cff', accent2:'#3dffa0', bg:'#0f1117'},
@@ -1293,8 +1405,7 @@ function renderSettings(){
         <span style="font-size:10px;color:${t.accent};font-weight:700">${t.label}</span>
       </div>`).join('');
   }
-  renderFormFieldSettings();
-  renderRoleTagList();
+  renderHomeMenuSettings();
   renderCatTagList();
   renderUserTagList();
 }
@@ -3198,6 +3309,15 @@ async function initApp(user){
       generation:false, locality:false, bloodline:false,
       morph:true, weight:true, acquired:true, memo:true,
     };
+  }
+  if(!DB.homeMenu){
+    DB.homeMenu=[
+      {id:'animals',icon:'🐾',label:'生体一覧',show:true},
+      {id:'feedlog',icon:'🍽️',label:'給餌ログ',show:true},
+      {id:'breeding',icon:'🥚',label:'繁殖ログ',show:true},
+      {id:'tasks',icon:'🔔',label:'タスク',show:true},
+      {id:'shop',icon:'🛒',label:'買い物',show:true},
+    ];
   }
   initTheme();renderHome();renderAnimals();
   if('Notification' in window && Notification.permission==='granted'){
