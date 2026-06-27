@@ -527,6 +527,19 @@
   <!-- SETTINGS -->
   <div class="page" id="page-settings">
 
+    <div class="settings-section-header" onclick="toggleSettingsSection('profile')">
+      👤 プロフィール <span id="settings-arrow-profile">▶</span>
+    </div>
+    <div id="settings-body-profile" style="display:none">
+      <div class="settings-card">
+        <div class="form-group">
+          <label class="form-label">ユーザー名</label>
+          <input class="form-input" id="inputUserName" placeholder="表示名を入力（省略するとメールアドレスを表示）">
+        </div>
+        <button class="btn btn-primary" style="width:auto;padding:8px 16px;font-size:13px;margin-top:4px" onclick="saveUserName()">保存する</button>
+      </div>
+    </div>
+
     <div class="settings-section-header" onclick="toggleSettingsSection('theme')">
       🎨 テーマカラー <span id="settings-arrow-theme">▶</span>
     </div>
@@ -722,12 +735,18 @@
           <input class="form-input" id="inputLength" type="number" placeholder="mm">
         </div>
       </div>
-      <div class="form-row">
+      <div class="form-group" style="margin-bottom:8px">
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+          <input type="checkbox" id="selfBredCheck" onchange="toggleSelfBred(this.checked)" style="width:16px;height:16px">
+          自家繁殖個体
+        </label>
+      </div>
+      <div class="form-row" id="acquiredRow">
         <div class="form-group">
-          <label class="form-label">入手日（任意）</label>
+          <label class="form-label" id="acquiredDateLabel">入手日（任意）</label>
           <input class="form-input" id="inputAcquiredDate" type="date">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="acquiredFromGroup">
           <label class="form-label">入手元（任意）</label>
           <input class="form-input" id="inputAcquiredFrom" placeholder="ブリーダー名など">
         </div>
@@ -1977,6 +1996,35 @@ function toggleBreedSession(id){
   if(!body)return;
   const open=body.classList.toggle('open');
   arrow.classList.toggle('open',open);
+}
+
+
+function stopBreedEvent(id){
+  const idx=DB.breedEvents.findIndex(x=>x.id===id);
+  if(idx>-1){DB.breedEvents[idx].stoppedAt=new Date().toISOString().slice(0,10);}
+  saveDB();
+  const openSessions=[...document.querySelectorAll('.breed-session-body.open')].map(el=>el.id.replace('bsbody-',''));
+  renderBreedingLog();
+  openSessions.forEach(sid=>{
+    const body=document.getElementById('bsbody-'+sid);
+    const arrow=document.getElementById('bsarrow-'+sid);
+    if(body)body.classList.add('open');
+    if(arrow)arrow.classList.add('open');
+  });
+}
+
+function unstopBreedEvent(id){
+  const idx=DB.breedEvents.findIndex(x=>x.id===id);
+  if(idx>-1){delete DB.breedEvents[idx].stoppedAt;}
+  saveDB();
+  const openSessions=[...document.querySelectorAll('.breed-session-body.open')].map(el=>el.id.replace('bsbody-',''));
+  renderBreedingLog();
+  openSessions.forEach(sid=>{
+    const body=document.getElementById('bsbody-'+sid);
+    const arrow=document.getElementById('bsarrow-'+sid);
+    if(body)body.classList.add('open');
+    if(arrow)arrow.classList.add('open');
+  });
 }
 
 function daysBetween(from,to){
@@ -3284,6 +3332,8 @@ function openEditModal(id){
   document.getElementById('inputLength').value=a.length||'';
   document.getElementById('inputAcquiredDate').value=a.acquiredDate||'';
   document.getElementById('inputAcquiredFrom').value=a.acquiredFrom||'';
+  const sbcEdit=document.getElementById('selfBredCheck');
+  if(sbcEdit){const isSelfBred=a.acquiredFrom==='自家繁殖';sbcEdit.checked=isSelfBred;toggleSelfBred(isSelfBred);}
   document.getElementById('inputMemo').value=a.memo||'';
   // 累代
   if(a.generation){
@@ -3329,6 +3379,30 @@ function closeModal(id){document.getElementById(id).classList.remove('open');}
 
 
 
+
+
+function toggleSelfBred(checked){
+  const label=document.getElementById('acquiredDateLabel');
+  const fromGroup=document.getElementById('acquiredFromGroup');
+  if(checked){
+    label.textContent='誕生日（任意）';
+    fromGroup.style.display='none';
+    document.getElementById('inputAcquiredFrom').value='自家繁殖';
+  }else{
+    label.textContent='入手日（任意）';
+    fromGroup.style.display='';
+    document.getElementById('inputAcquiredFrom').value='';
+  }
+}
+
+function saveUserName(){
+  const name=document.getElementById('inputUserName').value.trim();
+  localStorage.setItem('exo_username',name);
+  const user=window._currentUser;
+  document.getElementById('headerUserEmail').textContent=name||(user?user.email:'');
+  showToast('保存しました');
+}
+
 function showToast(msg){
   let toast=document.getElementById('toastMsg');
   if(!toast){
@@ -3368,6 +3442,7 @@ function enableSaveBtn(){
 
 function clearForm(){
   ['inputName','inputSpecies','inputWeight','inputLength','inputAcquiredDate','inputAcquiredFrom','inputMemo'].forEach(id=>{document.getElementById(id).value='';});
+  const sbc=document.getElementById('selfBredCheck');if(sbc){sbc.checked=false;toggleSelfBred(false);}
   document.getElementById('inputCategory').value='reptile';
   if(document.getElementById('inputRole'))document.getElementById('inputRole').value='pet';
   document.querySelectorAll('.seg-btn').forEach((b,i)=>b.classList.toggle('active',i===0));
@@ -3607,7 +3682,10 @@ document.addEventListener('click',e=>{
 // ─── Init ─────────────────────────────────────────
 async function initApp(user){
   currentUser=user;
-  document.getElementById('headerUserEmail').textContent=user.email;
+  window._currentUser=user;
+  const savedName=localStorage.getItem('exo_username');
+  document.getElementById('headerUserEmail').textContent=savedName||user.email;
+  if(document.getElementById('inputUserName'))document.getElementById('inputUserName').value=savedName||'';
   document.getElementById('authScreen').style.display='none';
   const loaded=await loadFromCloud();
   if(!loaded)loadDB();
