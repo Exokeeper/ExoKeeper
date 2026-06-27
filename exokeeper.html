@@ -601,29 +601,23 @@
       <div id="homeMenuSettings"></div>
     </div>
 
-    <div class="settings-section-header" onclick="toggleSettingsSection('custom')">
+    <div class="settings-section-header" id="customSettingsHeader" onclick="toggleSettingsSection('custom')" style="border-radius:12px;transition:border-radius 0.2s">
       ⚙️ カスタム設定 <span id="settings-arrow-custom">▶</span>
     </div>
-    <div id="settings-body-custom" style="display:none">
+    <div id="settings-body-custom" style="display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:16px;margin-top:-8px;margin-bottom:8px;background:var(--surface)">
 
-      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:8px 0 6px">カテゴリ</div>
-      <div class="settings-card">
-        <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
-        <div id="catTagList"></div>
-      </div>
+      <div style="font-weight:700;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border);margin-bottom:10px">カテゴリ</div>
+      <div class="settings-hint" style="margin-bottom:8px">フィルターに表示する分類と順番を管理します。</div>
+      <div id="catTagList"></div>
 
-      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:12px 0 6px">種名</div>
-      <div class="settings-card">
-        <div class="settings-hint">生体や繁殖ログに付けられる種名タグを管理します。</div>
-        <div id="userTagList"></div>
-        <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ 追加する</button>
-      </div>
+      <div style="font-weight:700;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border);margin:16px 0 10px">種名</div>
+      <div class="settings-hint" style="margin-bottom:8px">生体や繁殖ログに付けられる種名タグを管理します。</div>
+      <div id="userTagList"></div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ 追加する</button>
 
-      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:12px 0 6px">餌の種類</div>
-      <div class="settings-card">
-        <div id="feedTagList"></div>
-        <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ 追加する</button>
-      </div>
+      <div style="font-weight:700;font-size:13px;color:var(--text2);padding-bottom:8px;border-bottom:1px solid var(--border);margin:16px 0 10px">餌の種類</div>
+      <div id="feedTagList"></div>
+      <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ 追加する</button>
 
     </div>
 
