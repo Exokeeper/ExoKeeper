@@ -2122,7 +2122,20 @@ function saveBreedEvent(){
     DB.breedEvents.push(entry);
   }
   saveDB();closeModal('breedEventModal');
+  // 開いていたセッションを記憶して再描画後に復元
+  const openSessions=[...document.querySelectorAll('.breed-session-body.open')].map(el=>el.id.replace('bsbody-',''));
   renderBreedingLog();
+  openSessions.forEach(id=>{
+    const body=document.getElementById('bsbody-'+id);
+    const arrow=document.getElementById('bsarrow-'+id);
+    if(body){body.classList.add('open');}
+    if(arrow){arrow.classList.add('open');}
+  });
+  // 追加したセッションも開く
+  const newBody=document.getElementById('bsbody-'+currentBreedSessionId);
+  const newArrow=document.getElementById('bsarrow-'+currentBreedSessionId);
+  if(newBody){newBody.classList.add('open');}
+  if(newArrow){newArrow.classList.add('open');}
 }
 
 function deleteBreedEvent(eventId,sessionId){
