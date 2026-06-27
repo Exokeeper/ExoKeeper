@@ -741,7 +741,7 @@
     </div>
     <div class="btn-row">
       <button class="btn btn-ghost" onclick="closeModal('animalModal')">キャンセル</button>
-      <button class="btn btn-primary" onclick="saveAnimal()">登録する</button>
+      <button class="btn btn-primary" id="saveAnimalBtn" onclick="saveAnimal()" disabled style="opacity:0.4;cursor:not-allowed;transition:all 0.3s">登録する</button>
     </div>
     <div style="margin-top:10px" id="deleteBtn"></div>
   </div>
@@ -3278,6 +3278,10 @@ function openAddModal(){
 function openEditModal(id){
   const a=DB.animals.find(x=>x.id===id);if(!a)return;
   editingId=id;photoData=a.photo||null;morphTags=[...(a.morphs||[])];hetTags=[...(a.hets||[])];currentSex=a.sex||'';
+  const saveBtn=document.getElementById('saveAnimalBtn');
+  if(saveBtn){saveBtn.textContent='更新する';saveBtn.disabled=true;saveBtn.style.opacity='0.4';saveBtn.style.cursor='not-allowed';saveBtn.style.background='';}
+  // 変更検知
+  setTimeout(()=>setupAnimalFormChangeDetection(),100);
   currentAnimalUserTags=[...(a.userTags||[])];
   document.getElementById('modalTitle').textContent='生体を編集';
   document.getElementById('inputName').value=a.name||'';
@@ -3331,6 +3335,45 @@ function openEditModal(id){
 
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 
+
+
+function showToast(msg){
+  let toast=document.getElementById('toastMsg');
+  if(!toast){
+    toast=document.createElement('div');
+    toast.id='toastMsg';
+    toast.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;padding:10px 20px;border-radius:20px;font-size:14px;font-weight:600;z-index:9999;opacity:0;transition:opacity 0.3s';
+    document.body.appendChild(toast);
+  }
+  toast.textContent=msg;
+  toast.style.opacity='1';
+  clearTimeout(toast._timer);
+  toast._timer=setTimeout(()=>toast.style.opacity='0',2000);
+}
+
+function setupAnimalFormChangeDetection(){
+  const btn=document.getElementById('saveAnimalBtn');
+  if(!btn||!editingId)return;
+  const fields=['inputName','inputSpecies','inputWeight','inputLength','inputAcquiredDate','inputAcquiredFrom','inputMemo','inputCategory','inputLocality','inputBloodline'];
+  fields.forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.oninput=()=>enableSaveBtn();
+  });
+  // 性別・タグ・モルフなどは既存のクリックで変更されるので監視
+  document.querySelectorAll('#animalModal .seg-btn, #animalModal .tag-chip, #morphWrap, #hetWrap').forEach(el=>{
+    el.addEventListener('click',()=>setTimeout(enableSaveBtn,50));
+  });
+}
+
+function enableSaveBtn(){
+  const btn=document.getElementById('saveAnimalBtn');
+  if(!btn||!editingId)return;
+  btn.disabled=false;
+  btn.style.opacity='1';
+  btn.style.cursor='pointer';
+  btn.style.background='var(--accent)';
+}
+
 function clearForm(){
   ['inputName','inputSpecies','inputWeight','inputLength','inputAcquiredDate','inputAcquiredFrom','inputMemo'].forEach(id=>{document.getElementById(id).value='';});
   document.getElementById('inputCategory').value='reptile';
@@ -3373,8 +3416,15 @@ function saveAnimal(){
 
   if(editingId){const idx=DB.animals.findIndex(a=>a.id===editingId);if(idx>-1)DB.animals[idx]={...DB.animals[idx],...data};}
   else DB.animals.push({id:DB.nextId++,...data});
-  saveDB();closeModal('animalModal');renderAnimals();renderHome();
-  if(editingId)showDetail(editingId,'profile');
+  const wasEditing=!!editingId;
+  saveDB();renderAnimals();renderHome();
+  if(wasEditing){
+    const btn=document.getElementById('saveAnimalBtn');
+    if(btn){btn.disabled=true;btn.style.opacity='0.4';btn.style.cursor='not-allowed';}
+    showToast('更新しました');
+  }else{
+    closeModal('animalModal');
+  }
 }
 
 
