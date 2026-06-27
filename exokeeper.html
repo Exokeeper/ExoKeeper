@@ -995,14 +995,18 @@
     <div class="form-group">
       <label class="form-label">イベント種別</label>
       <select class="form-select" id="breedEventType">
-        <option value="交尾確認">💑 交尾確認</option>
-        <option value="産卵セット投入">🥚 産卵セット投入</option>
-        <option value="産卵確認">🪺 産卵確認</option>
-        <option value="孵化">🐣 孵化</option>
-        <option value="菌糸瓶投入">🍄 菌糸瓶投入</option>
-        <option value="菌糸瓶交換">🔄 菌糸瓶交換</option>
-        <option value="羽化">🦋 羽化</option>
-        <option value="その他">📝 その他</option>
+        <option value="ペアリング">ペアリング</option>
+        <option value="交尾確認">交尾確認</option>
+        <option value="産卵セット投入">産卵セット投入</option>
+        <option value="産卵確認">産卵確認</option>
+        <option value="採卵">採卵</option>
+        <option value="孵化">孵化</option>
+        <option value="菌糸瓶投入">菌糸瓶投入</option>
+        <option value="菌糸瓶交換">菌糸瓶交換</option>
+        <option value="マット交換">マット交換</option>
+        <option value="蛹化">蛹化</option>
+        <option value="羽化">羽化</option>
+        <option value="その他">その他</option>
       </select>
     </div>
     <div class="form-group">
@@ -1888,8 +1892,8 @@ function saveBulkRegister(){
 
 // ─── Breeding ─────────────────────────────────────
 const BREED_EVENT_EMOJI={
-  '交尾確認':'💑','産卵セット投入':'🥚','産卵確認':'🪺',
-  '孵化':'🐣','菌糸瓶投入':'🍄','菌糸瓶交換':'🔄','羽化':'🦋','その他':'📝'
+  'ペアリング':'⚫︎','交尾確認':'⚫︎','産卵セット投入':'⚫︎','産卵確認':'⚫︎',
+  '採卵':'⚫︎','孵化':'⚫︎','菌糸瓶投入':'⚫︎','菌糸瓶交換':'⚫︎','マット交換':'⚫︎','蛹化':'⚫︎','羽化':'⚫︎','その他':'⚫︎'
 };
 let editingBreedSessionId=null,currentBreedSessionId=null,currentBreedUserTags=[],breedEventPhoto=null,editingBreedEventId=null;
 
@@ -1911,7 +1915,7 @@ function buildBreedSessionCard(s){
     const days=daysBetween(e.date,today);
     const isHatch=e.type==='孵化'||e.type==='羽化';
     return`<div class="breed-event">
-      <div class="breed-event-icon" onclick="toggleBreedEvent('bec-${e.id}')" style="cursor:pointer">${BREED_EVENT_EMOJI[e.type]||'📝'}</div>
+      <div class="breed-event-icon" onclick="toggleBreedEvent('bec-${e.id}')" style="cursor:pointer">${BREED_EVENT_EMOJI[e.type]||'⚫︎'}</div>
       <div class="breed-event-body" style="cursor:pointer" onclick="toggleBreedEvent('bec-${e.id}')">
         <div class="breed-event-type">${e.type}${e.count?' · '+e.count:''}${e.weight?' · '+e.weight+'g':''}</div>
         <div class="breed-event-date">${e.date}</div>
@@ -2295,7 +2299,7 @@ function buildBreedSessionCardForPage(s){
     const days=daysBetween(e.date,today);
     const isHatch=e.type==='孵化'||e.type==='羽化';
     return`<div class="breed-event">
-      <div class="breed-event-icon" onclick="toggleBreedEvent('bec2-${e.id}')" style="cursor:pointer">${BREED_EVENT_EMOJI[e.type]||'📝'}</div>
+      <div class="breed-event-icon" onclick="toggleBreedEvent('bec2-${e.id}')" style="cursor:pointer">${BREED_EVENT_EMOJI[e.type]||'⚫︎'}</div>
       <div class="breed-event-body" style="cursor:pointer" onclick="toggleBreedEvent('bec2-${e.id}')">
         <div class="breed-event-type">${e.type}${e.count?' · '+e.count:''}${e.weight?' · '+e.weight+'g':''}</div>
         <div class="breed-event-date">${e.date}</div>
