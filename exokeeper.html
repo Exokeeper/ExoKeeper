@@ -558,7 +558,7 @@
     <div class="filter-bar" id="feedMgmtFilterBar">
       <button class="filter-btn active" id="feedMgmtFilterAll" onclick="setFeedFilter(null,this)">すべて</button>
       <div style="margin-left:auto">
-        <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('feedtag');document.getElementById('settings-body-feedtag').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button>
+        <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('custom');document.getElementById('settings-body-custom').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button>
       </div>
     </div>
     <div id="feedMgmtList"></div>
@@ -601,31 +601,30 @@
       <div id="homeMenuSettings"></div>
     </div>
 
-    <div class="settings-section-header" onclick="toggleSettingsSection('cattag')">
-      🏷️ 分類タグ <span id="settings-arrow-cattag">▶</span>
+    <div class="settings-section-header" onclick="toggleSettingsSection('custom')">
+      ⚙️ カスタム設定 <span id="settings-arrow-custom">▶</span>
     </div>
-    <div id="settings-body-cattag" style="display:none">
-      <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
-      <div id="catTagList"></div>
-    </div>
+    <div id="settings-body-custom" style="display:none">
 
-    <div class="settings-section-header" onclick="toggleSettingsSection('usertag')">
-      🔖 ユーザータグ <span id="settings-arrow-usertag">▶</span>
-    </div>
-    <div id="settings-body-usertag" style="display:none">
-      <div class="settings-hint">生体や繁殖ログに付けられる独自タグを管理します。</div>
-      <div id="userTagList"></div>
-      <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ タグを追加</button>
-    </div>
+      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:8px 0 6px">カテゴリ</div>
+      <div class="settings-card">
+        <div class="settings-hint">フィルターに表示する分類と順番を管理します。</div>
+        <div id="catTagList"></div>
+      </div>
 
-    <div class="settings-section-header" onclick="toggleSettingsSection('feedtag')">
-      🪲 餌タグ <span id="settings-arrow-feedtag">▶</span>
-    </div>
-    <div id="settings-body-feedtag" style="display:none">
+      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:12px 0 6px">種名</div>
+      <div class="settings-card">
+        <div class="settings-hint">生体や繁殖ログに付けられる種名タグを管理します。</div>
+        <div id="userTagList"></div>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ 追加する</button>
+      </div>
+
+      <div style="font-weight:700;font-size:13px;color:var(--text2);margin:12px 0 6px">餌の種類</div>
       <div class="settings-card">
         <div id="feedTagList"></div>
-        <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ タグを追加</button>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ 追加する</button>
       </div>
+
     </div>
 
     <div class="settings-section-header" onclick="toggleSettingsSection('about')">
@@ -3664,7 +3663,7 @@ function renderFeedMgmt(){
   if(filterBar){
     const tagBtns=DB.feedTags.map(t=>`<button class="filter-btn${currentFeedFilter===t.id?' active':''}" onclick="setFeedFilter(${t.id},this)">${t.name}</button>`).join('');
     const allBtn=`<button class="filter-btn${currentFeedFilter===null?' active':''}" onclick="setFeedFilter(null,this)">すべて</button>`;
-    const settingBtn=`<div style="margin-left:auto"><button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('feedtag');document.getElementById('settings-body-feedtag').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button></div>`;
+    const settingBtn=`<div style="margin-left:auto"><button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('custom');document.getElementById('settings-body-custom').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button></div>`;
     filterBar.innerHTML=allBtn+tagBtns+settingBtn;
   }
 
