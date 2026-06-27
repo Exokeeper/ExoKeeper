@@ -2122,9 +2122,7 @@ function saveBreedEvent(){
     DB.breedEvents.push(entry);
   }
   saveDB();closeModal('breedEventModal');
-  const session=DB.breedSessions.find(x=>x.id===currentBreedSessionId);
-  if(session)showDetail(session.animalId,'breeding');
-  else renderBreedingLog();
+  renderBreedingLog();
 }
 
 function deleteBreedEvent(eventId,sessionId){
