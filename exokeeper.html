@@ -1933,22 +1933,27 @@ function buildBreedSessionCard(s){
   const today=new Date().toISOString().slice(0,10);
 
   const eventsHtml=events.map(e=>{
-    const days=daysBetween(e.date,today);
+    const displayDate=e.stoppedAt||today;
+    const days=daysBetween(e.date,displayDate);
+    const isStopped=!!e.stoppedAt;
     const isHatch=e.type==='孵化'||e.type==='羽化';
     return`<div class="breed-event">
       <div class="breed-event-icon" onclick="toggleBreedEvent('bec-${e.id}')" style="cursor:pointer">${BREED_EVENT_EMOJI[e.type]||'⚫︎'}</div>
       <div class="breed-event-body" style="cursor:pointer" onclick="toggleBreedEvent('bec-${e.id}')">
         <div class="breed-event-type">${e.type}${e.count?' · '+e.count:''}${e.weight?' · '+e.weight+'g':''}</div>
         <div class="breed-event-date">${e.date}</div>
-        <div class="breed-event-days">${days}日目</div>
+        <div class="breed-event-days">${isStopped?`${days}日目で記録停止`:`${days}日目`}</div>
       </div>
       <span class="breed-event-arrow" id="bearrow-${e.id}" onclick="toggleBreedEvent('bec-${e.id}')" style="cursor:pointer">▼</span>
       <button class="breed-event-del" onclick="deleteBreedEvent(${e.id},${s.id})">🗑</button>
       <div class="breed-event-body-content" id="bec-${e.id}" style="grid-column:1/-1">
         ${e.memo?`<div class="breed-event-memo" style="margin-bottom:6px">${e.memo}</div>`:''}
         ${e.photo?`<img src="${e.photo}" class="breed-event-photo" onclick="openBreedEventPhotoViewer('${e.photo}')">`:''}
-        <div style="display:flex;gap:6px;margin-top:8px">
+        <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap">
           <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBreedEventModalEdit(${e.id})">✏️ 編集</button>
+          ${isStopped
+            ?`<button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="unstopBreedEvent(${e.id})">▶ カウント再開</button>`
+            :`<button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="stopBreedEvent(${e.id})">⏹ カウント停止</button>`}
           ${isHatch?`<button class="btn btn-success" style="padding:6px 10px;font-size:12px;width:auto" onclick="openBulkRegModal(${s.id},${e.id})">🐣 子個体を一括登録</button>`:''}
         </div>
       </div>
