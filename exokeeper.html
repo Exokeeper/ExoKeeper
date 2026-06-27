@@ -555,6 +555,12 @@
     <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px">
       <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openFeedItemModal()">＋ 登録する</button>
     </div>
+    <div class="filter-bar" id="feedMgmtFilterBar">
+      <button class="filter-btn active" id="feedMgmtFilterAll" onclick="setFeedFilter(null,this)">すべて</button>
+      <div style="margin-left:auto">
+        <button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('feedtag');document.getElementById('settings-body-feedtag').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button>
+      </div>
+    </div>
     <div id="feedMgmtList"></div>
     <div id="feedMgmtEmpty" class="empty-state" style="display:none">
       <div class="empty-state-icon">🪲</div>
@@ -1427,6 +1433,10 @@ async function loadFromCloud(){
   ];
   DB.formFields=d.formFields||null;
   DB.homeMenu=d.homeMenu||null;
+  // 新しいメニュー項目が既存データにない場合追加
+  if(DB.homeMenu&&!DB.homeMenu.find(m=>m.id==='feedmgmt')){
+    DB.homeMenu.push({id:'feedmgmt',icon:'🪲',label:'餌管理',show:false});
+  }
   DB.feedItems=d.feedItems||[];
   DB.feedLogs=d.feedLogs||[];
   DB.feedTags=d.feedTags||[];
@@ -1504,7 +1514,7 @@ function renderHome(){
   const menuGrid=document.getElementById('homeMenuGrid');
   if(menuGrid&&DB.homeMenu){
     const tabMap={
-      animals:1, feedlog:2, tasks:3, shop:null, breeding:null,
+      animals:1, feedlog:2, tasks:3, shop:null, breeding:null, feedmgmt:null,
     };
     menuGrid.innerHTML=DB.homeMenu.filter(m=>m.show).map(m=>{
       const tabIdx=tabMap[m.id];
@@ -3640,11 +3650,29 @@ function saveAnimal(){
 // ─── Feed Management ──────────────────────────────
 let editingFeedItemId=null, currentFeedItemId=null, selectedFeedTagId=null;
 
+let currentFeedFilter=null;
+function setFeedFilter(tagId,btn){
+  currentFeedFilter=tagId;
+  document.querySelectorAll('#feedMgmtFilterBar .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  renderFeedMgmt();
+}
+
 function renderFeedMgmt(){
+  // タグフィルターバーを更新
+  const filterBar=document.getElementById('feedMgmtFilterBar');
+  if(filterBar){
+    const tagBtns=DB.feedTags.map(t=>`<button class="filter-btn${currentFeedFilter===t.id?' active':''}" onclick="setFeedFilter(${t.id},this)">${t.name}</button>`).join('');
+    const allBtn=`<button class="filter-btn${currentFeedFilter===null?' active':''}" onclick="setFeedFilter(null,this)">すべて</button>`;
+    const settingBtn=`<div style="margin-left:auto"><button class="filter-btn" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('feedtag');document.getElementById('settings-body-feedtag').scrollIntoView({behavior:'smooth'})},200)" style="color:var(--text2)">⚙️ タグ設定</button></div>`;
+    filterBar.innerHTML=allBtn+tagBtns+settingBtn;
+  }
+
   const list=document.getElementById('feedMgmtList');
   const empty=document.getElementById('feedMgmtEmpty');
   if(!list)return;
-  const items=DB.feedItems.filter(x=>!x.ended);
+  let items=DB.feedItems.filter(x=>!x.ended);
+  if(currentFeedFilter!==null)items=items.filter(x=>x.tagId===currentFeedFilter);
   if(!items.length){list.innerHTML='';empty.style.display='';return;}
   empty.style.display='none';
   list.innerHTML=items.map(item=>{
