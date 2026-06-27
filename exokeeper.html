@@ -368,12 +368,34 @@
     </div>
     <button class="btn btn-primary" onclick="authSubmit()" id="authSubmitBtn">ログイン</button>
     <div style="font-size:11px;color:var(--text2);text-align:center;margin-top:12px;line-height:1.6">
-      ご利用にあたっては<a href="#" onclick="showPage('settings',document.querySelectorAll('.tab')[4]);setTimeout(()=>{toggleSettingsSection('about');document.getElementById('settings-body-about').scrollIntoView({behavior:'smooth'})},300);document.getElementById('authScreen').style.display='none';return false;" style="color:var(--accent)">利用規約・免責事項</a>に同意したものとみなします
+      ご利用にあたっては<a href="#" onclick="document.getElementById('termsModal').classList.add('open');return false;" style="color:var(--accent)">利用規約・免責事項</a>に同意したものとみなします
     </div>
     <div class="auth-switch">
       <span id="authSwitchText">アカウントをお持ちでない方は</span>
       <button onclick="toggleAuthMode()" id="authSwitchBtn">新規登録</button>
     </div>
+  </div>
+</div>
+
+<!-- ── Terms Modal ── -->
+<div class="modal-overlay" id="termsModal">
+  <div class="modal-sheet" style="max-height:80vh;overflow-y:auto">
+    <div class="modal-title">利用規約・免責事項</div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.8;padding-bottom:8px">
+      <div style="font-size:15px;font-weight:700;color:var(--text1);margin-bottom:4px">ExoKeeper</div>
+      <div style="font-size:11px;margin-bottom:12px">v1.0</div>
+      <div style="margin-bottom:12px">個人が開発したエキゾチックアニマル飼育管理Webアプリです。</div>
+      <div style="margin-bottom:4px">✅ 無料でご利用いただけます</div>
+      <div style="margin-bottom:4px">❌ 二次配布・複製・改変・商用利用は禁止です</div>
+      <div style="margin-bottom:4px">⚠️ 飼育管理のサポートを目的としており、生体の生死に関する責任は負いかねます</div>
+      <div style="margin-bottom:12px">⚠️ 本アプリの利用により生じたいかなる損害についても責任を負いかねます</div>
+      <div style="margin-bottom:4px;font-weight:600;color:var(--text1)">🔒 データについて</div>
+      <div style="margin-bottom:12px">本アプリはSupabaseを利用してデータを管理しています。登録されたメールアドレスおよび飼育データはサーバー上に保存されます。第三者への提供は行いません。なお、データの消失・破損等についても責任を負いかねます。</div>
+      <div style="margin-bottom:4px;font-weight:600;color:var(--text1)">🐦 お問い合わせ・バグ報告</div>
+      <a href="https://x.com/martin__2814" target="_blank" style="color:var(--accent);text-decoration:none;display:block;margin-bottom:12px">@martin__2814 (X)</a>
+      <div style="font-size:11px">※ バグ修正やご返答にはお時間をいただく場合があります</div>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('termsModal').classList.remove('open')">閉じる</button>
   </div>
 </div>
 
