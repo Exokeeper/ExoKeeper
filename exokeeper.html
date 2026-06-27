@@ -550,6 +550,19 @@
   </div>
 
   <!-- SETTINGS -->
+  <!-- 餌管理ページ -->
+  <div class="page" id="page-feedmgmt">
+    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px">
+      <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openFeedItemModal()">＋ 登録する</button>
+    </div>
+    <div id="feedMgmtList"></div>
+    <div id="feedMgmtEmpty" class="empty-state" style="display:none">
+      <div class="empty-state-icon">🪲</div>
+      <div class="empty-state-title">登録がありません</div>
+      <div class="empty-state-desc">上の「＋ 登録する」から追加しましょう</div>
+    </div>
+  </div>
+
   <div class="page" id="page-settings">
 
     <div class="settings-section-header" onclick="toggleSettingsSection('profile')">
@@ -597,6 +610,16 @@
       <div class="settings-hint">生体や繁殖ログに付けられる独自タグを管理します。</div>
       <div id="userTagList"></div>
       <button class="btn btn-primary" style="margin-top:10px" onclick="openUserTagModal()">＋ タグを追加</button>
+    </div>
+
+    <div class="settings-section-header" onclick="toggleSettingsSection('feedtag')">
+      🪲 餌タグ <span id="settings-arrow-feedtag">▶</span>
+    </div>
+    <div id="settings-body-feedtag" style="display:none">
+      <div class="settings-card">
+        <div id="feedTagList"></div>
+        <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ タグを追加</button>
+      </div>
     </div>
 
     <div class="settings-section-header" onclick="toggleSettingsSection('about')">
@@ -1228,6 +1251,65 @@
   </div>
 </div>
 
+
+<!-- ── Feed Item Modal ── -->
+<div class="modal-overlay" id="feedItemModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="feedItemModalTitle">餌を登録する</div>
+    <div class="form-group">
+      <label class="form-label">種類（タグ）</label>
+      <div id="feedTagSelect" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">登録日</label>
+      <input class="form-input" id="feedItemDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ（任意）</label>
+      <input class="form-input" id="feedItemMemo" placeholder="数量・ケース名など">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('feedItemModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveFeedItem()">登録する</button>
+    </div>
+    <div style="margin-top:10px" id="feedItemDeleteBtn"></div>
+  </div>
+</div>
+
+<!-- ── Feed Log Modal ── -->
+<div class="modal-overlay" id="feedLogModal">
+  <div class="modal-sheet">
+    <div class="modal-title">記録を追加</div>
+    <div class="form-group">
+      <label class="form-label">日付</label>
+      <input class="form-input" id="feedLogDate" type="date">
+    </div>
+    <div class="form-group">
+      <label class="form-label">メモ（任意）</label>
+      <input class="form-input" id="feedLogMemo" placeholder="交換内容・状態など">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('feedLogModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveFeedLog()">記録する</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Feed Tag Modal ── -->
+<div class="modal-overlay" id="feedTagModal">
+  <div class="modal-sheet">
+    <div class="modal-title">餌タグを追加</div>
+    <div class="form-group">
+      <label class="form-label">タグ名</label>
+      <input class="form-input" id="feedTagName" placeholder="例）デュビア、レッドローチ">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('feedTagModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveFeedTag()">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Photo viewer ── -->
 <div class="photo-viewer" id="photoViewer">
   <button class="photo-viewer-close" onclick="closePhotoViewer()">✕</button>
@@ -1312,7 +1394,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,
+      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,feedItems:DB.feedItems,feedLogs:DB.feedLogs,feedTags:DB.feedTags,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1345,6 +1427,9 @@ async function loadFromCloud(){
   ];
   DB.formFields=d.formFields||null;
   DB.homeMenu=d.homeMenu||null;
+  DB.feedItems=d.feedItems||[];
+  DB.feedLogs=d.feedLogs||[];
+  DB.feedTags=d.feedTags||[];
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1357,7 +1442,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,feedItems:[],feedLogs:[],feedTags:[],masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1408,6 +1493,7 @@ function showPage(name,tabEl,filter){
   if(name==='feedlog'){renderFeedLog();}
   if(name==='tasks'){renderTasks();}
   if(name==='shop'){renderShop();}
+  if(name==='feedmgmt'){renderFeedMgmt();}
   if(name==='breeding'){renderBreedingLog();}
   if(name==='settings'){renderSettings();}
 }
@@ -3550,6 +3636,154 @@ function saveAnimal(){
 }
 
 
+
+// ─── Feed Management ──────────────────────────────
+let editingFeedItemId=null, currentFeedItemId=null, selectedFeedTagId=null;
+
+function renderFeedMgmt(){
+  const list=document.getElementById('feedMgmtList');
+  const empty=document.getElementById('feedMgmtEmpty');
+  if(!list)return;
+  const items=DB.feedItems.filter(x=>!x.ended);
+  if(!items.length){list.innerHTML='';empty.style.display='';return;}
+  empty.style.display='none';
+  list.innerHTML=items.map(item=>{
+    const tag=DB.feedTags.find(t=>t.id===item.tagId);
+    const logs=DB.feedLogs.filter(l=>l.itemId===item.id).sort((a,b)=>b.date.localeCompare(a.date));
+    const lastLog=logs[0];
+    const today=new Date().toISOString().slice(0,10);
+    const days=lastLog?daysBetween(lastLog.date,today):daysBetween(item.date,today);
+    return`<div class="settings-card" style="margin-bottom:12px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:15px">${tag?tag.name:'不明'}</div>
+          <div style="font-size:12px;color:var(--text2)">登録日：${item.date}</div>
+          ${item.memo?`<div style="font-size:12px;color:var(--text2)">${item.memo}</div>`:''}
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--accent2);font-weight:700">${lastLog?`最終記録から${days}日目`:`登録から${days}日目`}</div>
+        </div>
+      </div>
+      <div style="margin-bottom:8px">
+        ${logs.map(l=>`<div style="font-size:12px;color:var(--text2);padding:4px 0;border-bottom:1px solid var(--border)">
+          ${l.date}${l.memo?' · '+l.memo:''}
+        </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="openFeedLogModal(${item.id})">＋ 記録を追加</button>
+        <button class="btn btn-ghost" style="padding:6px 10px;font-size:12px;width:auto" onclick="openFeedItemModalEdit(${item.id})">✏️ 編集</button>
+        <button class="btn" style="padding:6px 10px;font-size:12px;width:auto;background:#d0d0d0;color:#111;border:none" onclick="endFeedItem(${item.id})">終了</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openFeedItemModal(){
+  editingFeedItemId=null;selectedFeedTagId=null;
+  document.getElementById('feedItemModalTitle').textContent='餌を登録する';
+  document.getElementById('feedItemDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('feedItemMemo').value='';
+  document.getElementById('feedItemDeleteBtn').innerHTML='';
+  renderFeedTagSelect();
+  document.getElementById('feedItemModal').classList.add('open');
+}
+
+function openFeedItemModalEdit(id){
+  const item=DB.feedItems.find(x=>x.id===id);
+  if(!item)return;
+  editingFeedItemId=id;selectedFeedTagId=item.tagId||null;
+  document.getElementById('feedItemModalTitle').textContent='餌を編集';
+  document.getElementById('feedItemDate').value=item.date||'';
+  document.getElementById('feedItemMemo').value=item.memo||'';
+  document.getElementById('feedItemDeleteBtn').innerHTML=`<button class="btn btn-danger" style="font-size:12px;padding:6px 12px;width:auto;margin:0 auto;display:block;opacity:0.7" onclick="deleteFeedItem(${id})">削除する</button>`;
+  renderFeedTagSelect();
+  document.getElementById('feedItemModal').classList.add('open');
+}
+
+function renderFeedTagSelect(){
+  const el=document.getElementById('feedTagSelect');
+  if(!el)return;
+  el.innerHTML=DB.feedTags.map(t=>`
+    <button class="filter-btn${selectedFeedTagId===t.id?' active':''}" onclick="selectedFeedTagId=${t.id};renderFeedTagSelect()">${t.name}</button>
+  `).join('');
+}
+
+function saveFeedItem(){
+  if(!selectedFeedTagId){alert('種類を選択してください');return;}
+  const entry={
+    id:editingFeedItemId||DB.nextId++,
+    tagId:selectedFeedTagId,
+    date:document.getElementById('feedItemDate').value,
+    memo:document.getElementById('feedItemMemo').value.trim(),
+  };
+  if(editingFeedItemId){
+    const idx=DB.feedItems.findIndex(x=>x.id===editingFeedItemId);
+    if(idx>-1)DB.feedItems[idx]=entry;
+  }else{
+    DB.feedItems.push(entry);
+  }
+  saveDB();closeModal('feedItemModal');renderFeedMgmt();
+}
+
+function deleteFeedItem(id){
+  DB.feedItems=DB.feedItems.filter(x=>x.id!==id);
+  DB.feedLogs=DB.feedLogs.filter(x=>x.itemId!==id);
+  saveDB();closeModal('feedItemModal');renderFeedMgmt();
+}
+
+function endFeedItem(id){
+  const idx=DB.feedItems.findIndex(x=>x.id===id);
+  if(idx>-1)DB.feedItems[idx].ended=true;
+  saveDB();renderFeedMgmt();
+}
+
+function openFeedLogModal(itemId){
+  currentFeedItemId=itemId;
+  document.getElementById('feedLogDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('feedLogMemo').value='';
+  document.getElementById('feedLogModal').classList.add('open');
+}
+
+function saveFeedLog(){
+  const entry={
+    id:DB.nextId++,
+    itemId:currentFeedItemId,
+    date:document.getElementById('feedLogDate').value,
+    memo:document.getElementById('feedLogMemo').value.trim(),
+  };
+  DB.feedLogs.push(entry);
+  saveDB();closeModal('feedLogModal');renderFeedMgmt();
+}
+
+function openFeedTagModal(){
+  document.getElementById('feedTagName').value='';
+  document.getElementById('feedTagModal').classList.add('open');
+}
+
+function saveFeedTag(){
+  const name=document.getElementById('feedTagName').value.trim();
+  if(!name)return;
+  DB.feedTags.push({id:DB.nextId++,name});
+  saveDB();closeModal('feedTagModal');renderFeedTagList();
+}
+
+function renderFeedTagList(){
+  const el=document.getElementById('feedTagList');
+  if(!el)return;
+  if(!DB.feedTags.length){el.innerHTML='<div style="color:var(--text2);font-size:13px">タグがありません</div>';return;}
+  el.innerHTML=DB.feedTags.map(t=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:14px">${t.name}</span>
+      <button class="btn btn-ghost" style="padding:4px 8px;font-size:12px;width:auto" onclick="deleteFeedTag(${t.id})">削除</button>
+    </div>
+  `).join('');
+}
+
+function deleteFeedTag(id){
+  DB.feedTags=DB.feedTags.filter(x=>x.id!==id);
+  saveDB();renderFeedTagList();
+}
+
 // ─── Archive ──────────────────────────────────────
 let archivingId=null;
 function openArchiveDialog(id){
@@ -3769,6 +4003,7 @@ async function initApp(user){
       {id:'breeding',icon:'🥚',label:'繁殖ログ',show:true},
       {id:'tasks',icon:'🔔',label:'タスク',show:true},
       {id:'shop',icon:'🛒',label:'買い物',show:true},
+      {id:'feedmgmt',icon:'🪲',label:'餌管理',show:false},
     ];
   }
   initTheme();renderHome();renderAnimals();
