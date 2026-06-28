@@ -275,7 +275,7 @@
   .today-task-time{margin-left:auto;font-size:12px;color:var(--accent);font-weight:700;flex-shrink:0;}
 
   /* ── Detail ── */
-  .detail-photo{width:100%;aspect-ratio:16/9;background:var(--surface2);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:16px;}
+  .detail-photo{width:100%;aspect-ratio:1/1;background:var(--surface2);border-radius:14px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:64px;margin-bottom:16px;}
   .detail-photo img{width:100%;height:100%;object-fit:cover;}
   .detail-name{font-size:24px;font-weight:800;margin-bottom:4px;}
   .detail-species{font-size:14px;color:var(--text2);margin-bottom:12px;}
@@ -2544,12 +2544,17 @@ function openBreedEventModalEdit(eventId){
   document.getElementById('breedEventMemo').value=e.memo||'';
   const area=document.getElementById('breedEventPhotoArea');
   area.innerHTML=breedEventPhoto
-    ?`<img src="${breedEventPhoto}" alt="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`
+    ?`<div style="position:relative"><img src="${breedEventPhoto}" alt="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"><button onclick="removeBreedEventPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`
     :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを編集';
   updateBreedEventTypeSelect(e.type);
   const chkEdit=document.getElementById('breedEventCountUp');if(chkEdit)chkEdit.checked=!e.stoppedAt;
   document.getElementById('breedEventModal').classList.add('open');
+}
+
+function removeBreedEventPhoto(){
+  breedEventPhoto=null;
+  document.getElementById('breedEventPhotoArea').innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
 }
 
 function handleBreedEventPhoto(e){
@@ -2558,7 +2563,7 @@ function handleBreedEventPhoto(e){
   reader.onload=ev=>{
     breedEventPhoto=ev.target.result;
     document.getElementById('breedEventPhotoArea').innerHTML=
-      `<img src="${breedEventPhoto}" alt="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
+      `<div style="position:relative"><img src="${breedEventPhoto}" alt="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"><button onclick="removeBreedEventPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   };
   reader.readAsDataURL(file);
 }
@@ -5010,7 +5015,11 @@ async function initApp(user){
   const metaName=user.user_metadata?.display_name||'';
   const localName=localStorage.getItem('exo_username')||'';
   const savedName=metaName||localName;
-  if(metaName&&!localName)localStorage.setItem('exo_username',metaName);
+  // localStorageにあってSupabaseにない場合は自動でSupabaseに移行
+  if(!metaName&&localName&&sbClient){
+    sbClient.auth.updateUser({data:{display_name:localName}});
+  }
+  if(savedName)localStorage.setItem('exo_username',savedName);
   document.getElementById('headerUserEmail').textContent=savedName||user.email;
   if(document.getElementById('inputUserName'))document.getElementById('inputUserName').value=savedName||'';
   document.getElementById('authScreen').style.display='none';
