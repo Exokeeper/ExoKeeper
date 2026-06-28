@@ -3795,7 +3795,7 @@ function openEditModal(id){
   document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.sex===currentSex));
   const area=document.getElementById('photoUploadArea');
   area.innerHTML=photoData
-    ?`<img src="${photoData}" alt=""><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`
+    ?`<div style="position:relative;display:inline-block;width:100%"><img src="${photoData}" alt="" style="width:100%;border-radius:8px"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`
     :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
   renderTagChips('morphWrap','morphInput',morphTags,'morphs','morphSug');
   renderTagChips('hetWrap','hetInput',hetTags,'hets','hetSug');
@@ -3874,7 +3874,7 @@ function setupAnimalFormChangeDetection(){
 
 function enableSaveBtn(){
   const btn=document.getElementById('saveAnimalBtn');
-  if(!btn||!editingId)return;
+  if(!btn)return;
   btn.disabled=false;
   btn.style.opacity='1';
   btn.style.cursor='pointer';
@@ -4720,10 +4720,17 @@ function copyAnimal(id){
 
 // ─── Sex / Photo ──────────────────────────────────
 function setSex(v,el){currentSex=v;document.querySelectorAll('.seg-btn').forEach(b=>b.classList.remove('active'));el.classList.add('active');}
+
+function removeAnimalPhoto(){
+  photoData=null;
+  document.getElementById('photoUploadArea').innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  enableSaveBtn();
+}
+
 function handlePhoto(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{photoData=ev.target.result;document.getElementById('photoUploadArea').innerHTML=`<img src="${photoData}" alt=""><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;enableSaveBtn();};
+  reader.onload=ev=>{photoData=ev.target.result;document.getElementById('photoUploadArea').innerHTML=`<div style="position:relative;display:inline-block;width:100%"><img src="${photoData}" alt="" style="width:100%;border-radius:8px"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;enableSaveBtn();};
   reader.readAsDataURL(file);
 }
 
