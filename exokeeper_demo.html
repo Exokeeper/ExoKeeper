@@ -1565,7 +1565,7 @@ function startDemo(){
           <div class="animal-card-photo">${a.photo?`<img src="${a.photo}" alt="">`:CAT_EMOJI[a.category]||'🔮'}</div>
           <div class="animal-card-body">
             <div class="animal-card-name">${a.name||'名前なし'}</div>
-            <div class="animal-card-sub">${a.species||''}${a.sex?` ${SEX_ICON[a.sex]}`:''}</div>
+            <div class="animal-card-sub">${a.species||''}${a.sex==='male'?' ♂':a.sex==='female'?' ♀':''}</div>
             <div class="animal-card-tags">${(a.userTags||[]).map(tid=>{const t=DB.userTags.find(x=>x.id===tid);return t?`<span class="animal-card-tag" style="background:${t.color}20;color:${t.color}">${t.name}</span>`:''}).join('')}</div>
           </div>
         </div>`;
