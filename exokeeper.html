@@ -4410,10 +4410,7 @@ function deleteBreedEventSetting(idx){
 
 
 function onBreedEventTypeChange(){
-  const type=document.getElementById('breedEventType').value;
-  const noCount=['孵化','羽化'];
-  const countChk=document.getElementById('breedEventCountUp');
-  if(countChk)countChk.checked=!noCount.includes(type);
+  // 種別変更時は何もしない（チェックはユーザーが選択）
 }
 
 function updateBreedEventTypeSelect(currentVal){
