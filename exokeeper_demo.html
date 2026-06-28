@@ -1549,21 +1549,30 @@ function startDemo(){
   }
   document.getElementById('headerUserEmail').textContent='デモユーザー';
   initTheme();
-  renderHome();
-  // 生体ページをアクティブにしてからrenderAnimals
-  const animalsPage=document.getElementById('page-animals');
-  if(animalsPage){
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    animalsPage.classList.add('active');
+  // 生体グリッドを直接描画（filterBarを使わない方法）
+  const grid=document.getElementById('animalGrid');
+  const empty=document.getElementById('animalEmpty');
+  if(grid){
+    const list=DB.animals.filter(a=>!a.archived);
+    if(!list.length){
+      grid.innerHTML='';
+      if(empty)empty.style.display='';
+    }else{
+      if(empty)empty.style.display='none';
+      grid.innerHTML=list.map(a=>{
+        const tag=DB.userTags.find(t=>a.userTags&&a.userTags.includes(t.id));
+        return`<div class="animal-card" onclick="showDetail(${a.id})">
+          <div class="animal-card-photo">${a.photo?`<img src="${a.photo}" alt="">`:CAT_EMOJI[a.category]||'🔮'}</div>
+          <div class="animal-card-body">
+            <div class="animal-card-name">${a.name||'名前なし'}</div>
+            <div class="animal-card-sub">${a.species||''}${a.sex?` ${SEX_ICON[a.sex]}`:''}</div>
+            <div class="animal-card-tags">${(a.userTags||[]).map(tid=>{const t=DB.userTags.find(x=>x.id===tid);return t?`<span class="animal-card-tag" style="background:${t.color}20;color:${t.color}">${t.name}</span>`:''}).join('')}</div>
+          </div>
+        </div>`;
+      }).join('');
+    }
   }
-  setTimeout(()=>{
-    renderAnimals();
-    // ホームページに戻す
-    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-    const homePage=document.getElementById('page-home');
-    if(homePage)homePage.classList.add('active');
-    renderHome();
-  }, 50);
+  renderHome();
 }
 
 
@@ -3386,6 +3395,7 @@ function renderAnimals(){
   const existingRoleBtns=filterBar.querySelectorAll('[data-roletag]');
   existingRoleBtns.forEach(b=>b.remove());
   const allBtn=filterBar.querySelector('[onclick*="all"]');
+  if(!allBtn)return;
   DB.roleTags.filter(r=>r.show).forEach(r=>{
     const btn=document.createElement('button');
     btn.className='filter-btn'+(currentFilter==='role-'+r.id?' active':'');
