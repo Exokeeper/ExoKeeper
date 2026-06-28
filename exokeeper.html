@@ -3971,7 +3971,6 @@ function saveUserFood(){
   if(!name)return;
   const sizesRaw=document.getElementById('userFoodSizes').value.trim();
   const sizes=sizesRaw?sizesRaw.split(',').map(s=>s.replace(/、/g,',').trim()).filter(Boolean):[];
-]/).map(s=>s.trim()).filter(Boolean):[];
   const master=getFoodMaster();
   const newFood={
     id:'u'+Date.now(),
