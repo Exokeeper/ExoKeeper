@@ -4723,7 +4723,7 @@ function setSex(v,el){currentSex=v;document.querySelectorAll('.seg-btn').forEach
 function handlePhoto(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{photoData=ev.target.result;document.getElementById('photoUploadArea').innerHTML=`<img src="${photoData}" alt=""><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;};
+  reader.onload=ev=>{photoData=ev.target.result;document.getElementById('photoUploadArea').innerHTML=`<img src="${photoData}" alt=""><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;enableSaveBtn();};
   reader.readAsDataURL(file);
 }
 
