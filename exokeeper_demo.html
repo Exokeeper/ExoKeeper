@@ -1161,7 +1161,7 @@
     <div class="modal-title">イベントを記録</div>
     <div class="form-group">
       <label class="form-label">イベント種別</label>
-      <select class="form-select" id="breedEventType">
+      <select class="form-select" id="breedEventType" onchange="onBreedEventTypeChange()">
       </select>
     </div>
     <div class="form-group">
@@ -1181,6 +1181,12 @@
     <div class="form-group">
       <label class="form-label">メモ（任意）</label>
       <textarea class="form-textarea" id="breedEventMemo" placeholder="詳細・気づきなど" style="min-height:52px"></textarea>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <input type="checkbox" id="breedEventCountUp" checked style="width:16px;height:16px">
+        日数カウントを開始する
+      </label>
     </div>
     <div class="form-group">
       <label class="form-label">写真（任意）</label>
@@ -1502,15 +1508,18 @@ const DEMO_SAMPLE_DATA = {
     {id:302,animalId:4,sireId:4,damId:5,createdAt:'2025-11-01',memo:'2025-2026年繁殖'},
   ],
   breedEvents:[
-    {id:401,sessionId:301,date:'2026-01-15',type:'ペアリング',count:'',weight:'',memo:''},
-    {id:402,sessionId:301,date:'2026-02-20',type:'産卵確認',count:'1個',weight:'',memo:'1クラッチ目'},
-    {id:403,sessionId:301,date:'2026-04-20',type:'孵化',count:'1匹',weight:'',memo:'コメット誕生',stoppedAt:'2026-04-20'},
+    // レオパ
+    {id:401,sessionId:301,date:'2026-01-15',type:'ペアリング',count:'',weight:'',memo:'',stoppedAt:'2026-01-15'},
+    {id:411,sessionId:301,date:'2026-01-16',type:'交尾確認',count:'',weight:'',memo:'',stoppedAt:'2026-01-16'},
+    {id:402,sessionId:301,date:'2026-02-20',type:'産卵確認',count:'1個',weight:'',memo:'1クラッチ目',stoppedAt:'2026-04-20'},
     {id:404,sessionId:301,date:'2026-03-15',type:'産卵確認',count:'2個',weight:'',memo:'2クラッチ目'},
     {id:405,sessionId:301,date:'2026-04-10',type:'産卵確認',count:'2個',weight:'',memo:'3クラッチ目'},
-    {id:406,sessionId:302,date:'2025-11-01',type:'ペアリング',count:'',weight:'',memo:''},
-    {id:407,sessionId:302,date:'2025-11-02',type:'交尾確認',count:'',weight:'',memo:''},
-    {id:408,sessionId:302,date:'2025-11-08',type:'産卵セット投入',count:'',weight:'',memo:'産卵木2本・発酵マット'},
-    {id:409,sessionId:302,date:'2025-12-08',type:'採卵',count:'卵10個・幼虫12頭（計22頭）',weight:'',memo:''},
+    {id:403,sessionId:301,date:'2026-04-20',type:'孵化',count:'1匹',weight:'',memo:'コメット誕生'},
+    // パラワン
+    {id:406,sessionId:302,date:'2025-11-01',type:'ペアリング',count:'',weight:'',memo:'',stoppedAt:'2025-11-01'},
+    {id:407,sessionId:302,date:'2025-11-02',type:'交尾確認',count:'',weight:'',memo:'',stoppedAt:'2025-11-02'},
+    {id:408,sessionId:302,date:'2025-11-08',type:'産卵セット投入',count:'',weight:'',memo:'産卵木2本・発酵マット',stoppedAt:'2025-12-08'},
+    {id:409,sessionId:302,date:'2025-12-08',type:'採卵',count:'卵10個・幼虫12頭（計22頭）',weight:'',memo:'',stoppedAt:'2025-12-08'},
     {id:410,sessionId:302,date:'2026-02-01',type:'菌糸瓶投入',count:'22頭',weight:'',memo:'800cc菌糸瓶'},
   ],
   tasks:[
@@ -1519,7 +1528,7 @@ const DEMO_SAMPLE_DATA = {
     {id:503,text:'温湿度確認',enabled:true,dayOfWeek:1,time:'09:00',repeat:true,optional:false},
   ],
   shopItems:[],shops:[],healthLogs:[],photos:[],feedItems:[],feedLogs:[],feedTags:[],
-  nextId:600,theme:'blue',
+  nextId:620,theme:'blue',
   catTags:[
     {id:'reptile',show:true},{id:'amphibian',show:false},{id:'arthropod',show:true},
     {id:'mammal',show:true},{id:'bird',show:false},{id:'fish',show:false},{id:'other',show:true},
@@ -2564,6 +2573,7 @@ function openBreedEventModal(sessionId){
     `<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを記録';
   updateBreedEventTypeSelect('交尾確認');
+  const chk=document.getElementById('breedEventCountUp');if(chk)chk.checked=true;
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -2581,6 +2591,7 @@ function openBreedEventModalEdit(eventId){
     :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを編集';
   updateBreedEventTypeSelect(e.type);
+  const chkEdit=document.getElementById('breedEventCountUp');if(chkEdit)chkEdit.checked=!e.stoppedAt;
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -2601,6 +2612,7 @@ function saveBreedEvent(){
     sessionId:currentBreedSessionId,
     date:document.getElementById('breedEventDate').value,
     type:document.getElementById('breedEventType').value,
+    stoppedAt:document.getElementById('breedEventCountUp').checked?null:document.getElementById('breedEventDate').value,
     weight:document.getElementById('breedEventWeight').value,
     count:document.getElementById('breedEventCount').value.trim(),
     memo:document.getElementById('breedEventMemo').value.trim(),
@@ -4548,6 +4560,11 @@ function deleteBreedEventSetting(idx){
   settings.splice(idx,1);
   saveDB();
   renderBreedEventSettingsList();
+}
+
+
+function onBreedEventTypeChange(){
+  // 種別変更時は何もしない（チェックはユーザーが選択）
 }
 
 function updateBreedEventTypeSelect(currentVal){
