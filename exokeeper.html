@@ -743,8 +743,8 @@
     <div class="modal-title" id="modalTitle">生体を登録</div>
     <div class="form-group">
       <label class="form-label">写真</label>
-      <div class="photo-upload" id="photoUploadArea" onclick="document.getElementById('photoInput').click()">
-        <span class="photo-upload-icon">📷</span><span>タップして写真を選択</span>
+      <div id="photoUploadArea" style="width:100%;aspect-ratio:1/1;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text2);font-size:13px;position:relative;overflow:hidden;" onclick="document.getElementById('photoInput').click()">
+        <span style="font-size:32px">📷</span><span>タップして写真を選択</span>
         <input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">
       </div>
     </div>
@@ -4891,8 +4891,9 @@ function removeAnimalPhoto(){
   photoData=null;
   const area=document.getElementById('photoUploadArea');
   area.style.cursor='pointer';
+  area.style.padding='';
   area.onclick=()=>document.getElementById('photoInput').click();
-  area.innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  area.innerHTML=`<span style="font-size:32px">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
   enableSaveBtn();
 }
 
@@ -5011,7 +5012,7 @@ document.addEventListener('click',e=>{
 async function initApp(user){
   currentUser=user;
   window._currentUser=user;
-  // user_metadataとlocalStorageの両方から名前を取得（metadataを優先）
+  // Supabaseのuser_metadataから名前を取得（最新のセッション情報を使用）
   const metaName=user.user_metadata?.display_name||'';
   const localName=localStorage.getItem('exo_username')||'';
   const savedName=metaName||localName;
@@ -5019,9 +5020,21 @@ async function initApp(user){
   if(!metaName&&localName&&sbClient){
     sbClient.auth.updateUser({data:{display_name:localName}});
   }
+  // 常にlocalStorageを最新に保つ
   if(savedName)localStorage.setItem('exo_username',savedName);
   document.getElementById('headerUserEmail').textContent=savedName||user.email;
   if(document.getElementById('inputUserName'))document.getElementById('inputUserName').value=savedName||'';
+  // Supabaseから最新のユーザー情報を取得して名前を更新
+  if(sbClient){
+    sbClient.auth.getUser().then(({data})=>{
+      const freshName=data?.user?.user_metadata?.display_name||'';
+      if(freshName){
+        localStorage.setItem('exo_username',freshName);
+        document.getElementById('headerUserEmail').textContent=freshName;
+        if(document.getElementById('inputUserName'))document.getElementById('inputUserName').value=freshName;
+      }
+    });
+  }
   document.getElementById('authScreen').style.display='none';
   const loaded=await loadFromCloud();
   if(!loaded)loadDB();
