@@ -634,9 +634,9 @@
         <div style="padding:12px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleCustomSub('feedtag')">
           餌の種類 <span id="custom-arrow-feedtag">▶</span>
         </div>
-        <div id="custom-body-feedtag" style="display:none;padding:0 16px 12px">
-          <div id="feedTagList"></div>
-          <button class="btn btn-primary" style="margin-top:10px" onclick="openFeedTagModal()">＋ 追加する</button>
+        <div id="custom-body-feedtag" style="display:none;padding:8px 14px 12px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">種類名をタップするとサイズのON/OFFが設定できます</div>
+          <div id="foodMasterSettings"></div>
         </div>
       </div>
 
@@ -994,17 +994,40 @@
       <label class="form-label">日時</label>
       <input class="form-input" id="feedDatetime" type="datetime-local">
     </div>
+    <!-- カテゴリ選択 -->
     <div class="form-group">
+      <label class="form-label">カテゴリ</label>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="feedCategoryBtns">
+        <button class="filter-btn active" onclick="selectFeedCategory('live',this)">生き餌</button>
+        <button class="filter-btn" onclick="selectFeedCategory('frozen',this)">冷凍餌</button>
+        <button class="filter-btn" onclick="selectFeedCategory('vegetable',this)">野菜・果物</button>
+        <button class="filter-btn" onclick="selectFeedCategory('artificial',this)">人工飼料</button>
+        <button class="filter-btn" onclick="selectFeedCategory('custom',this)">自由入力</button>
+      </div>
+    </div>
+    <!-- 種類選択 -->
+    <div class="form-group" id="feedFoodSelectGroup">
       <label class="form-label">餌の種類</label>
-      <input class="form-input" id="feedFood" placeholder="例）デュビア、冷凍マウスPink S"
-        oninput="showSuggestions('feedFood','feedFoodSug')"
-        onfocus="showSuggestions('feedFood','feedFoodSug')" autocomplete="off">
-      <div class="tag-suggestions" id="feedFoodSug"></div>
+      <select class="form-select" id="feedFoodSelect" onchange="onFeedFoodSelect()">
+        <option value="">選択してください</option>
+      </select>
+    </div>
+    <!-- サイズ選択 -->
+    <div class="form-group" id="feedSizeGroup" style="display:none">
+      <label class="form-label">サイズ（任意）</label>
+      <select class="form-select" id="feedSizeSelect">
+        <option value="">-</option>
+      </select>
+    </div>
+    <!-- 自由入力 -->
+    <div class="form-group" id="feedFoodFreeGroup" style="display:none">
+      <label class="form-label">餌の種類</label>
+      <input class="form-input" id="feedFood" placeholder="例）デュビア、冷凍マウスPink S" autocomplete="off">
     </div>
     <div class="form-row">
       <div class="form-group">
-        <label class="form-label">量・匹数（任意）</label>
-        <input class="form-input" id="feedAmount" placeholder="例）3匹、1個">
+        <label class="form-label">数量（任意）</label>
+        <input class="form-input" id="feedAmount" placeholder="例）3">
       </div>
       <div class="form-group">
         <label class="form-label">結果（任意）</label>
@@ -1272,6 +1295,35 @@
 </div>
 
 
+
+<!-- ── Food Size Settings Popup ── -->
+<div class="modal-overlay" id="foodSizePopup">
+  <div class="modal-sheet">
+    <div class="modal-title" id="foodSizePopupTitle">サイズ設定</div>
+    <div id="foodSizeList"></div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="closeModal('foodSizePopup')">閉じる</button>
+  </div>
+</div>
+
+<!-- ── Add User Food Modal ── -->
+<div class="modal-overlay" id="addUserFoodModal">
+  <div class="modal-sheet">
+    <div class="modal-title">餌を追加する</div>
+    <div class="form-group">
+      <label class="form-label">名前</label>
+      <input class="form-input" id="userFoodName" placeholder="例）グリーンバナナローチ">
+    </div>
+    <div class="form-group">
+      <label class="form-label">サイズ（任意・カンマ区切り）</label>
+      <input class="form-input" id="userFoodSizes" placeholder="例）S,M,L または SSS,SS,S,M,L">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('addUserFoodModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveUserFood()">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Feed Item Modal ── -->
 <div class="modal-overlay" id="feedItemModal">
   <div class="modal-sheet">
@@ -1414,7 +1466,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,feedItems:DB.feedItems,feedLogs:DB.feedLogs,feedTags:DB.feedTags,
+      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,feedItems:DB.feedItems,feedLogs:DB.feedLogs,feedTags:DB.feedTags,foodMaster:DB.foodMaster,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1454,6 +1506,7 @@ async function loadFromCloud(){
   DB.feedItems=d.feedItems||[];
   DB.feedLogs=d.feedLogs||[];
   DB.feedTags=d.feedTags||[];
+  DB.foodMaster=d.foodMaster||null;
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1466,7 +1519,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,feedItems:[],feedLogs:[],feedTags:[],masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,feedItems:[],feedLogs:[],feedTags:[],foodMaster:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -3694,6 +3747,253 @@ function saveAnimal(){
 }
 
 
+
+
+// ─── Food Master ──────────────────────────────────
+const FOOD_MASTER_PRESET = [
+  // 生き餌 - 昆虫類
+  {id:'f001',cat:'live',subcat:'昆虫類',name:'ヨーロッパイエコオロギ',sizes:['SSS','SS','S','SM','M','ML','L','XL'],show:true,activeSizes:['SSS','SS','S','SM','M','ML','L','XL']},
+  {id:'f002',cat:'live',subcat:'昆虫類',name:'フタホシコオロギ',sizes:['SSS','SS','S','SM','M','ML','L','XL'],show:true,activeSizes:['SSS','SS','S','SM','M','ML','L','XL']},
+  {id:'f003',cat:'live',subcat:'昆虫類',name:'クロコオロギ',sizes:['SSS','SS','S','SM','M','ML','L','XL'],show:true,activeSizes:['SSS','SS','S','SM','M','ML','L','XL']},
+  {id:'f004',cat:'live',subcat:'昆虫類',name:'デュビア',sizes:['SSS','SS','S','SM','M','ML','L','XL'],show:true,activeSizes:['SSS','SS','S','SM','M','ML','L','XL']},
+  {id:'f005',cat:'live',subcat:'昆虫類',name:'レッドローチ',sizes:['SSS','SS','S','SM','M','ML','L','XL'],show:true,activeSizes:['SSS','SS','S','SM','M','ML','L','XL']},
+  {id:'f006',cat:'live',subcat:'昆虫類',name:'ミルワーム',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f007',cat:'live',subcat:'昆虫類',name:'ジャイアントミルワーム',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f008',cat:'live',subcat:'昆虫類',name:'ハニーワーム',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f009',cat:'live',subcat:'昆虫類',name:'シルクワーム',sizes:['SS','S','M','L'],show:true,activeSizes:['SS','S','M','L']},
+  {id:'f010',cat:'live',subcat:'昆虫類',name:'キイロショウジョウバエ',sizes:[],show:true,activeSizes:[]},
+  {id:'f011',cat:'live',subcat:'昆虫類',name:'トリニドショウジョウバエ',sizes:[],show:true,activeSizes:[]},
+  {id:'f012',cat:'live',subcat:'昆虫類',name:'イエバエ',sizes:[],show:true,activeSizes:[]},
+  {id:'f013',cat:'live',subcat:'昆虫類',name:'ハウスゲッコー',sizes:[],show:true,activeSizes:[]},
+  // 生き餌 - 土壌生物
+  {id:'f014',cat:'live',subcat:'土壌生物',name:'ホソワラジムシ',sizes:[],show:true,activeSizes:[]},
+  {id:'f015',cat:'live',subcat:'土壌生物',name:'トビムシ',sizes:[],show:true,activeSizes:[]},
+  {id:'f016',cat:'live',subcat:'土壌生物',name:'ミミズ',sizes:[],show:true,activeSizes:[]},
+  {id:'f017',cat:'live',subcat:'土壌生物',name:'イトミミズ',sizes:[],show:true,activeSizes:[]},
+  {id:'f018',cat:'live',subcat:'土壌生物',name:'アメリカミズアブ幼虫',sizes:[],show:true,activeSizes:[]},
+  {id:'f019',cat:'live',subcat:'土壌生物',name:'アメリカミズアブ成虫',sizes:[],show:true,activeSizes:[]},
+  // 生き餌 - 水生生物
+  {id:'f020',cat:'live',subcat:'水生生物',name:'メダカ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f021',cat:'live',subcat:'水生生物',name:'金魚',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f022',cat:'live',subcat:'水生生物',name:'ドジョウ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f023',cat:'live',subcat:'水生生物',name:'川魚',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f024',cat:'live',subcat:'水生生物',name:'ヌマエビ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f025',cat:'live',subcat:'水生生物',name:'スジエビ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f026',cat:'live',subcat:'水生生物',name:'ザリガニ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f027',cat:'live',subcat:'水生生物',name:'ミジンコ',sizes:[],show:true,activeSizes:[]},
+  {id:'f028',cat:'live',subcat:'水生生物',name:'ブラインシュリンプ',sizes:[],show:true,activeSizes:[]},
+  // 生き餌 - 哺乳類
+  {id:'f029',cat:'live',subcat:'哺乳類',name:'マウス',sizes:['ピンクS','ピンクM','ピンクL','ファジー','ホッパー','アダルトM','アダルトL','リタイア'],show:true,activeSizes:['ピンクS','ピンクM','ピンクL','ファジー','ホッパー','アダルトM','アダルトL','リタイア']},
+  {id:'f030',cat:'live',subcat:'哺乳類',name:'ラット',sizes:['ピンク','ファジー','ホッパー','アダルトS','アダルトM','アダルトL'],show:true,activeSizes:['ピンク','ファジー','ホッパー','アダルトS','アダルトM','アダルトL']},
+  // 冷凍餌
+  {id:'f031',cat:'frozen',subcat:'哺乳類',name:'マウス',sizes:['ピンクS','ピンクM','ピンクL','ファジー','ホッパー','アダルトM','アダルトL','リタイア'],show:true,activeSizes:['ピンクS','ピンクM','ピンクL','ファジー','ホッパー','アダルトM','アダルトL','リタイア']},
+  {id:'f032',cat:'frozen',subcat:'哺乳類',name:'ラット',sizes:['ピンク','ファジー','ホッパー','アダルトS','アダルトM','アダルトL'],show:true,activeSizes:['ピンク','ファジー','ホッパー','アダルトS','アダルトM','アダルトL']},
+  {id:'f033',cat:'frozen',subcat:'哺乳類',name:'ウサギ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f034',cat:'frozen',subcat:'鳥類',name:'ウズラ',sizes:['雛','成鳥'],show:true,activeSizes:['雛','成鳥']},
+  {id:'f035',cat:'frozen',subcat:'鳥類',name:'ヒヨコ',sizes:[],show:true,activeSizes:[]},
+  {id:'f036',cat:'frozen',subcat:'昆虫類',name:'コオロギ',sizes:['M','L'],show:true,activeSizes:['M','L']},
+  {id:'f037',cat:'frozen',subcat:'昆虫類',name:'デュビア',sizes:['M','L'],show:true,activeSizes:['M','L']},
+  {id:'f038',cat:'frozen',subcat:'昆虫類',name:'ミルワーム',sizes:[],show:true,activeSizes:[]},
+  {id:'f039',cat:'frozen',subcat:'昆虫類',name:'ジャイアントミルワーム',sizes:[],show:true,activeSizes:[]},
+  {id:'f040',cat:'frozen',subcat:'昆虫類',name:'イナゴ',sizes:['S','M','L'],show:true,activeSizes:['S','M','L']},
+  {id:'f041',cat:'frozen',subcat:'昆虫類',name:'サナギ',sizes:[],show:true,activeSizes:[]},
+  {id:'f042',cat:'frozen',subcat:'水生生物',name:'ドジョウ',sizes:[],show:true,activeSizes:[]},
+  {id:'f043',cat:'frozen',subcat:'水生生物',name:'アジ',sizes:[],show:true,activeSizes:[]},
+  {id:'f044',cat:'frozen',subcat:'水生生物',name:'ワカサギ',sizes:[],show:true,activeSizes:[]},
+  {id:'f045',cat:'frozen',subcat:'その他',name:'牛ハツ',sizes:[],show:true,activeSizes:[]},
+  // 野菜・果物
+  {id:'f046',cat:'vegetable',subcat:'野菜',name:'コマツナ',sizes:[],show:true,activeSizes:[]},
+  {id:'f047',cat:'vegetable',subcat:'野菜',name:'チンゲンサイ',sizes:[],show:true,activeSizes:[]},
+  {id:'f048',cat:'vegetable',subcat:'野菜',name:'豆苗',sizes:[],show:true,activeSizes:[]},
+  {id:'f049',cat:'vegetable',subcat:'野菜',name:'カボチャ',sizes:[],show:true,activeSizes:[]},
+  {id:'f050',cat:'vegetable',subcat:'果物',name:'トマト',sizes:[],show:true,activeSizes:[]},
+  {id:'f051',cat:'vegetable',subcat:'果物',name:'バナナ',sizes:[],show:true,activeSizes:[]},
+  {id:'f052',cat:'vegetable',subcat:'果物',name:'リンゴ',sizes:[],show:true,activeSizes:[]},
+];
+
+const FOOD_CAT_LABEL = {live:'生き餌',frozen:'冷凍餌',vegetable:'野菜・果物',artificial:'人工飼料',custom:'自由入力'};
+
+function getFoodMaster(){
+  if(!DB.foodMaster){
+    DB.foodMaster=FOOD_MASTER_PRESET.map(f=>({...f}));
+  }
+  return DB.foodMaster;
+}
+
+let currentFeedCategory='live';
+
+function selectFeedCategory(cat, btn){
+  currentFeedCategory=cat;
+  document.querySelectorAll('#feedCategoryBtns .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  
+  const freeGroup=document.getElementById('feedFoodFreeGroup');
+  const selectGroup=document.getElementById('feedFoodSelectGroup');
+  
+  if(cat==='custom'){
+    freeGroup.style.display='';
+    selectGroup.style.display='none';
+    document.getElementById('feedSizeGroup').style.display='none';
+  }else{
+    freeGroup.style.display='none';
+    selectGroup.style.display='';
+    updateFeedFoodSelect(cat);
+  }
+}
+
+function updateFeedFoodSelect(cat){
+  const master=getFoodMaster();
+  const foods=master.filter(f=>f.cat===cat&&f.show);
+  const select=document.getElementById('feedFoodSelect');
+  
+  // サブカテゴリでグループ化
+  const subcats=[...new Set(foods.map(f=>f.subcat))];
+  let html='<option value="">選択してください</option>';
+  subcats.forEach(sub=>{
+    const items=foods.filter(f=>f.subcat===sub);
+    if(items.length){
+      html+=`<optgroup label="${sub}">`;
+      items.forEach(f=>{
+        html+=`<option value="${f.id}">${f.name}</option>`;
+      });
+      html+='</optgroup>';
+    }
+  });
+  select.innerHTML=html;
+  document.getElementById('feedSizeGroup').style.display='none';
+}
+
+function onFeedFoodSelect(){
+  const foodId=document.getElementById('feedFoodSelect').value;
+  const master=getFoodMaster();
+  const food=master.find(f=>f.id===foodId);
+  const sizeGroup=document.getElementById('feedSizeGroup');
+  const sizeSelect=document.getElementById('feedSizeSelect');
+  
+  if(food&&food.activeSizes&&food.activeSizes.length>0){
+    sizeSelect.innerHTML='<option value="">-</option>'+food.activeSizes.map(s=>`<option value="${s}">${s}</option>`).join('');
+    sizeGroup.style.display='';
+  }else{
+    sizeGroup.style.display='none';
+  }
+}
+
+function renderFoodMasterSettings(){
+  const el=document.getElementById('foodMasterSettings');
+  if(!el)return;
+  const master=getFoodMaster();
+  const cats=['live','frozen','vegetable','artificial'];
+  
+  el.innerHTML=cats.map(cat=>{
+    const foods=master.filter(f=>f.cat===cat);
+    const userFoods=foods.filter(f=>f.isUser);
+    return`<div style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">
+      <div style="padding:10px 14px;font-weight:700;font-size:13px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;background:var(--surface2)" onclick="toggleFoodCat('${cat}')">
+        ${FOOD_CAT_LABEL[cat]} <span id="foodcat-arrow-${cat}">▶</span>
+      </div>
+      <div id="foodcat-body-${cat}" style="display:none;padding:8px 14px">
+        ${foods.filter(f=>!f.isUser).map(f=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;cursor:pointer;color:var(--accent)" onclick="openFoodSizeSettings('${f.id}')">${f.name}${f.sizes.length?` <span style="font-size:11px;color:var(--text2)">(${f.activeSizes.length}/${f.sizes.length}サイズ)</span>`:''}</span>
+            <label style="display:flex;align-items:center;gap:6px">
+              <input type="checkbox" ${f.show?'checked':''} onchange="toggleFoodShow('${f.id}',this.checked)" style="width:16px;height:16px">
+            </label>
+          </div>`).join('')}
+        ${userFoods.map(f=>`
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+            <span style="font-size:13px;cursor:pointer;color:var(--accent)" onclick="openFoodSizeSettings('${f.id}')">${f.name}★${f.sizes.length?` <span style="font-size:11px;color:var(--text2)">(${f.activeSizes.length}/${f.sizes.length}サイズ)</span>`:''}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <input type="checkbox" ${f.show?'checked':''} onchange="toggleFoodShow('${f.id}',this.checked)" style="width:16px;height:16px">
+              <button onclick="deleteUserFood('${f.id}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>
+            </div>
+          </div>`).join('')}
+        <button class="btn btn-primary" style="margin-top:8px;font-size:12px;padding:6px 12px;width:auto" onclick="openAddUserFoodModal('${cat}')">＋ 追加する</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleFoodCat(cat){
+  const body=document.getElementById('foodcat-body-'+cat);
+  const arrow=document.getElementById('foodcat-arrow-'+cat);
+  if(!body)return;
+  const open=body.style.display==='none';
+  body.style.display=open?'':'none';
+  if(arrow)arrow.textContent=open?'▼':'▶';
+}
+
+function toggleFoodShow(id,show){
+  const master=getFoodMaster();
+  const idx=master.findIndex(f=>f.id===id);
+  if(idx>-1)master[idx].show=show;
+  saveDB();
+}
+
+function openFoodSizeSettings(id){
+  const master=getFoodMaster();
+  const food=master.find(f=>f.id===id);
+  if(!food||!food.sizes.length)return;
+  
+  const popup=document.getElementById('foodSizePopup');
+  document.getElementById('foodSizePopupTitle').textContent=food.name+'のサイズ設定';
+  document.getElementById('foodSizeList').innerHTML=food.sizes.map(s=>`
+    <label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer">
+      <input type="checkbox" ${food.activeSizes.includes(s)?'checked':''} onchange="toggleFoodSize('${id}','${s}',this.checked)" style="width:16px;height:16px">
+      <span style="font-size:14px">${s}</span>
+    </label>`).join('');
+  popup.classList.add('open');
+}
+
+function toggleFoodSize(foodId,size,active){
+  const master=getFoodMaster();
+  const idx=master.findIndex(f=>f.id===foodId);
+  if(idx>-1){
+    if(active){
+      if(!master[idx].activeSizes.includes(size))master[idx].activeSizes.push(size);
+    }else{
+      master[idx].activeSizes=master[idx].activeSizes.filter(s=>s!==size);
+    }
+  }
+  saveDB();
+  renderFoodMasterSettings();
+}
+
+let addUserFoodCat=null;
+function openAddUserFoodModal(cat){
+  addUserFoodCat=cat;
+  document.getElementById('userFoodName').value='';
+  document.getElementById('userFoodSizes').value='';
+  document.getElementById('addUserFoodModal').classList.add('open');
+}
+
+function saveUserFood(){
+  const name=document.getElementById('userFoodName').value.trim();
+  if(!name)return;
+  const sizesRaw=document.getElementById('userFoodSizes').value.trim();
+  const sizes=sizesRaw?sizesRaw.split(/[,、
+]/).map(s=>s.trim()).filter(Boolean):[];
+  const master=getFoodMaster();
+  const newFood={
+    id:'u'+Date.now(),
+    cat:addUserFoodCat,
+    subcat:'カスタム',
+    name,
+    sizes,
+    activeSizes:[...sizes],
+    show:true,
+    isUser:true,
+  };
+  master.push(newFood);
+  saveDB();
+  closeModal('addUserFoodModal');
+  renderFoodMasterSettings();
+}
+
+function deleteUserFood(id){
+  DB.foodMaster=getFoodMaster().filter(f=>f.id!==id);
+  saveDB();
+  renderFoodMasterSettings();
+}
 
 // ─── Feed Management ──────────────────────────────
 let editingFeedItemId=null, currentFeedItemId=null, selectedFeedTagId=null;
