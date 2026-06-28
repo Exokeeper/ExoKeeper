@@ -1550,8 +1550,20 @@ function startDemo(){
   document.getElementById('headerUserEmail').textContent='デモユーザー';
   initTheme();
   renderHome();
-  // 生体ページを一度表示してからrenderAnimalsを呼ぶ
-  setTimeout(()=>renderAnimals(), 100);
+  // 生体ページをアクティブにしてからrenderAnimals
+  const animalsPage=document.getElementById('page-animals');
+  if(animalsPage){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    animalsPage.classList.add('active');
+  }
+  setTimeout(()=>{
+    renderAnimals();
+    // ホームページに戻す
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    const homePage=document.getElementById('page-home');
+    if(homePage)homePage.classList.add('active');
+    renderHome();
+  }, 50);
 }
 
 
