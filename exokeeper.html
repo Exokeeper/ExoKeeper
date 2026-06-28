@@ -482,7 +482,10 @@
   <div class="page" id="page-tasks">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="section-title" style="margin-top:0;margin-bottom:0">タスク管理</div>
-      <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openTaskModal()">＋ タスクを追加</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="showHint('tasks')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openTaskModal()">＋ タスクを追加</button>
+      </div>
     </div>
     <div id="notifBanner"></div>
     <div id="taskList"></div>
@@ -497,7 +500,10 @@
   <div class="page" id="page-breeding">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div class="section-title" style="margin-top:0;margin-bottom:0">繁殖・育成ログ</div>
-      <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openBreedSessionModalFromPage()">＋ 繁殖記録を開始</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="showHint('breeding')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openBreedSessionModalFromPage()">＋ 繁殖記録を開始</button>
+      </div>
     </div>
     <div class="filter-bar" id="breedFilterBar" style="margin-bottom:8px">
       <button class="filter-btn active" onclick="setBreedFilter('all',this)">すべて</button>
@@ -515,6 +521,7 @@
 
   <!-- SHOP -->
   <div class="page" id="page-shop">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button onclick="showHint('shop')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button></div>
     <div class="detail-tabs" style="margin-bottom:12px">
       <button class="detail-tab active" id="shopTab-list" onclick="switchShopTab('list')">🛒 買い物リスト</button>
       <button class="detail-tab" id="shopTab-shops" onclick="switchShopTab('shops')">🏪 ショップ一覧</button>
