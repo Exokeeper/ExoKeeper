@@ -433,6 +433,7 @@
 
   <!-- HOME -->
   <div class="page active" id="page-home">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button onclick="showHint('home')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button></div>
     <div class="menu-grid" id="homeMenuGrid">
       <div class="menu-card" onclick="showPage('animals',document.querySelectorAll('.tab')[1])">
         <div class="menu-card-icon">🐾</div><div class="menu-card-label">生体一覧</div>
@@ -459,7 +460,8 @@
 
   <!-- ANIMALS -->
   <div class="page" id="page-animals">
-    <div style="display:flex;align-items:center;justify-content:flex-end;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:12px">
+      <button onclick="showHint('animals')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
       <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openAddModal()">＋ 生体を登録</button>
     </div>
     <div class="filter-bar" id="filterBar">
@@ -482,7 +484,10 @@
   <div class="page" id="page-feedlog">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="section-title" style="margin-top:0;margin-bottom:0">給餌ログ</div>
-      <button class="btn btn-success" style="width:auto;padding:8px 14px;font-size:13px" onclick="openFeedModalFromLog()">＋ 給餌を記録</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="showHint('feedlog')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
+        <button class="btn btn-success" style="width:auto;padding:8px 14px;font-size:13px" onclick="openFeedModalFromLog()">＋ 給餌を記録</button>
+      </div>
     </div>
     <div id="feedLogList"></div>
   </div>
@@ -496,7 +501,10 @@
   <div class="page" id="page-tasks">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
       <div class="section-title" style="margin-top:0;margin-bottom:0">タスク管理</div>
-      <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openTaskModal()">＋ タスクを追加</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="showHint('tasks')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openTaskModal()">＋ タスクを追加</button>
+      </div>
     </div>
     <div id="notifBanner"></div>
     <div id="taskList"></div>
@@ -511,7 +519,10 @@
   <div class="page" id="page-breeding">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div class="section-title" style="margin-top:0;margin-bottom:0">繁殖・育成ログ</div>
-      <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openBreedSessionModalFromPage()">＋ 繁殖記録を開始</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <button onclick="showHint('breeding')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button>
+        <button class="btn btn-primary" style="width:auto;padding:8px 14px;font-size:13px" onclick="openBreedSessionModalFromPage()">＋ 繁殖記録を開始</button>
+      </div>
     </div>
     <div class="filter-bar" id="breedFilterBar" style="margin-bottom:8px">
       <button class="filter-btn active" onclick="setBreedFilter('all',this)">すべて</button>
@@ -529,6 +540,7 @@
 
   <!-- SHOP -->
   <div class="page" id="page-shop">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button onclick="showHint('shop')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button></div>
     <div class="detail-tabs" style="margin-bottom:12px">
       <button class="detail-tab active" id="shopTab-list" onclick="switchShopTab('list')">🛒 買い物リスト</button>
       <button class="detail-tab" id="shopTab-shops" onclick="switchShopTab('shops')">🏪 ショップ一覧</button>
@@ -592,6 +604,7 @@
   </div>
 
   <div class="page" id="page-settings">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px"><button onclick="showHint('settings')" style="background:none;border:1px solid var(--border);border-radius:50%;width:28px;height:28px;color:var(--text2);cursor:pointer;font-size:13px">?</button></div>
 
     <div class="settings-section-header" onclick="toggleSettingsSection('profile')">
       👤 プロフィール <span id="settings-arrow-profile">▶</span>
@@ -1438,6 +1451,70 @@
   </div>
 </div>
 
+
+<!-- ── Hint Popup ── -->
+<div id="hintPopup" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:2500;align-items:flex-end;justify-content:center" onclick="closeHint()">
+  <div style="max-width:480px;width:100%;background:var(--surface);border-radius:20px 20px 0 0;padding:24px;max-height:70vh;overflow-y:auto" onclick="event.stopPropagation()">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-weight:700;font-size:16px" id="hintTitle">使い方</div>
+      <button onclick="closeHint()" style="background:none;border:none;font-size:20px;color:var(--text2);cursor:pointer">✕</button>
+    </div>
+    <div id="hintBody" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
+  </div>
+</div>
+
+
+<!-- ── Tutorial ── -->
+<div id="tutorialOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:3000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:24px">
+  <div style="max-width:420px;width:100%;background:var(--surface);border-radius:20px;padding:32px 24px;position:relative">
+    <button onclick="closeTutorial()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:var(--text2);font-size:13px;cursor:pointer">スキップ</button>
+    <div id="tutorialSlides">
+      <div class="tutorial-slide" style="text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">🦎</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">ExoKeeperへようこそ</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">エキゾチックアニマルの飼育をもっと楽しく、もっとかんたんに管理できるアプリです。</div>
+      </div>
+      <div class="tutorial-slide" style="display:none;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">🐾</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">生体を登録しよう</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">飼育している生き物を登録しましょう。写真・種名・モルフなど詳細情報も記録できます。</div>
+      </div>
+      <div class="tutorial-slide" style="display:none;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">🍽️</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">給餌を記録しよう</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">何をいつ食べたか記録できます。餌の種類・サイズ・数量・結果まで細かく管理できます。</div>
+      </div>
+      <div class="tutorial-slide" style="display:none;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">🥚</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">繁殖を記録しよう</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">ペアリングから孵化まで繁殖の全工程を記録。産卵日からの日数カウントも自動で表示されます。</div>
+      </div>
+      <div class="tutorial-slide" style="display:none;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">🔔</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">タスクを設定しよう</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">給餌・温度確認などの定期作業をタスクとして登録。通知でお知らせすることもできます。</div>
+      </div>
+      <div class="tutorial-slide" style="display:none;text-align:center">
+        <div style="font-size:64px;margin-bottom:16px">✨</div>
+        <div style="font-size:22px;font-weight:900;margin-bottom:8px">準備完了！</div>
+        <div style="font-size:14px;color:var(--text2);line-height:1.8">さっそく最初の生体を登録してみましょう。設定からホームメニューのカスタマイズもできます。</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:center;gap:6px;margin:24px 0 20px" id="tutorialDots">
+      <div class="t-dot active"></div>
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+      <div class="t-dot"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <button id="tutorialPrevBtn" onclick="tutorialPrev()" class="btn btn-ghost" style="display:none">← 戻る</button>
+      <button id="tutorialNextBtn" onclick="tutorialNext()" class="btn btn-primary">次へ →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Photo viewer ── -->
 <div class="photo-viewer" id="photoViewer">
   <button class="photo-viewer-close" onclick="closePhotoViewer()">✕</button>
@@ -1543,6 +1620,73 @@ const DEMO_SAMPLE_DATA = {
   ],
 };
 
+
+// ─── Tutorial ─────────────────────────────────────
+let tutorialStep=0;
+const TUTORIAL_TOTAL=6;
+
+function showTutorial(){
+  tutorialStep=0;
+  updateTutorialSlide();
+  document.getElementById('tutorialOverlay').style.display='flex';
+}
+
+function closeTutorial(){
+  document.getElementById('tutorialOverlay').style.display='none';
+}
+
+function tutorialNext(){
+  if(tutorialStep<TUTORIAL_TOTAL-1){
+    tutorialStep++;
+    updateTutorialSlide();
+  }else{
+    closeTutorial();
+  }
+}
+
+function tutorialPrev(){
+  if(tutorialStep>0){
+    tutorialStep--;
+    updateTutorialSlide();
+  }
+}
+
+function updateTutorialSlide(){
+  document.querySelectorAll('.tutorial-slide').forEach((s,i)=>{
+    s.style.display=i===tutorialStep?'block':'none';
+  });
+  document.querySelectorAll('.t-dot').forEach((d,i)=>{
+    d.classList.toggle('active',i===tutorialStep);
+  });
+  document.getElementById('tutorialPrevBtn').style.display=tutorialStep>0?'':'none';
+  const nextBtn=document.getElementById('tutorialNextBtn');
+  nextBtn.textContent=tutorialStep===TUTORIAL_TOTAL-1?'さっそく使ってみる！':'次へ →';
+}
+
+// ─── Hint ─────────────────────────────────────────
+const HINTS = {
+  home: {title:'🏠 ホームの使い方',body:`<b>ホーム</b>は各機能へのショートカットです。<br><br>・メニューカードをタップして各ページに移動できます<br>・設定→ホームメニューで表示する項目や順番を変更できます`},
+  animals: {title:'🐾 生体一覧の使い方',body:`<b>生体一覧</b>では飼育している生き物を管理します。<br><br>・右上の「＋ 生体を登録」から追加できます<br>・フィルターで種類や種名タグで絞り込めます<br>・生体カードをタップすると詳細ページへ<br>・詳細ページでは給餌・計測・健康・繁殖の記録ができます`},
+  feedlog: {title:'🍽️ 給餌ログの使い方',body:`<b>給餌ログ</b>では全生体の給餌記録を確認できます。<br><br>・右上の「＋ 給餌を記録」から記録できます<br>・カテゴリ→種類→サイズの順で選択できます<br>・前回と同じ餌は自動で引き継がれます`},
+  breeding: {title:'🥚 繁殖ログの使い方',body:`<b>繁殖ログ</b>ではペアリングから孵化までを記録します。<br><br>・右上の「＋ 繁殖記録を開始」でペアを登録します<br>・「＋ イベント追加」でペアリング・産卵・孵化などを追記できます<br>・産卵確認などは日数カウンターが自動で進みます`},
+  tasks: {title:'🔔 タスクの使い方',body:`<b>タスク</b>では定期的な作業を管理します。<br><br>・右上の「＋ タスクを追加」から登録できます<br>・曜日・時刻・繰り返し設定ができます<br>・通知を許可するとお知らせが届きます`},
+  shop: {title:'🛒 買い物の使い方',body:`<b>買い物</b>では餌や用品の購入リストを管理します。<br><br>・「リスト」タブでアイテムを追加できます<br>・「ショップ」タブでよく使うショップを登録できます`},
+  feedmgmt: {title:'🪲 餌管理の使い方',body:`<b>餌管理</b>では生き餌や餌のストックを管理します。<br><br>・右上の「＋ 登録する」でケース単位で登録できます<br>・「＋ 記録を追加」で餌交換や補充の履歴を積み上げられます<br>・「終了」ボタンで使い切ったケースを完了にできます`},
+  settings: {title:'⚙️ 設定の使い方',body:`<b>設定</b>ではアプリをカスタマイズできます。<br><br>・<b>プロフィール</b>：ヘッダーに表示する名前を設定<br>・<b>テーマカラー</b>：アプリの色を変更<br>・<b>ホームメニュー</b>：ホームに表示する項目を管理<br>・<b>カスタム設定</b>：カテゴリ・種名・餌の種類・繁殖イベントを管理`},
+};
+
+function showHint(page){
+  const hint=HINTS[page];
+  if(!hint)return;
+  document.getElementById('hintTitle').textContent=hint.title;
+  document.getElementById('hintBody').innerHTML=hint.body;
+  document.getElementById('hintPopup').style.display='flex';
+}
+
+function closeHint(){
+  document.getElementById('hintPopup').style.display='none';
+}
+
 function startDemo(){
   document.getElementById('demoScreen').style.display='none';
   document.getElementById('authScreen').style.display='none';
@@ -1582,6 +1726,7 @@ function startDemo(){
     }
   }
   renderHome();
+  setTimeout(showTutorial, 500);
 }
 
 
