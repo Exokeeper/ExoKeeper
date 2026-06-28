@@ -3532,7 +3532,7 @@ function openFeedModal(animalId){
     },50);
   }else if(last&&last.food&&last.foodCat==='custom'){
     // 自由入力で記録した場合
-    const customBtn=document.querySelector("#feedCategoryBtns .filter-btn[onclick*="'custom'"]");
+    const customBtn=document.querySelector("#feedCategoryBtns .filter-btn[onclick*=custom]");
     selectFeedCategory('custom',customBtn);
     document.getElementById('feedFood').value=last.food;
   }else if(hasFav){
