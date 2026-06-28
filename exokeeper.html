@@ -1145,7 +1145,7 @@
     <div class="modal-title">イベントを記録</div>
     <div class="form-group">
       <label class="form-label">イベント種別</label>
-      <select class="form-select" id="breedEventType">
+      <select class="form-select" id="breedEventType" onchange="onBreedEventTypeChange()">
       </select>
     </div>
     <div class="form-group">
@@ -1165,6 +1165,12 @@
     <div class="form-group">
       <label class="form-label">メモ（任意）</label>
       <textarea class="form-textarea" id="breedEventMemo" placeholder="詳細・気づきなど" style="min-height:52px"></textarea>
+    </div>
+    <div class="form-group">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)">
+        <input type="checkbox" id="breedEventCountUp" checked style="width:16px;height:16px">
+        日数カウントを開始する
+      </label>
     </div>
     <div class="form-group">
       <label class="form-label">写真（任意）</label>
@@ -2415,6 +2421,7 @@ function openBreedEventModal(sessionId){
     `<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを記録';
   updateBreedEventTypeSelect('交尾確認');
+  const chk=document.getElementById('breedEventCountUp');if(chk)chk.checked=true;
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -2432,6 +2439,7 @@ function openBreedEventModalEdit(eventId){
     :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを編集';
   updateBreedEventTypeSelect(e.type);
+  const chkEdit=document.getElementById('breedEventCountUp');if(chkEdit)chkEdit.checked=!e.stoppedAt;
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -2452,6 +2460,7 @@ function saveBreedEvent(){
     sessionId:currentBreedSessionId,
     date:document.getElementById('breedEventDate').value,
     type:document.getElementById('breedEventType').value,
+    stoppedAt:document.getElementById('breedEventCountUp').checked?null:document.getElementById('breedEventDate').value,
     weight:document.getElementById('breedEventWeight').value,
     count:document.getElementById('breedEventCount').value.trim(),
     memo:document.getElementById('breedEventMemo').value.trim(),
@@ -4397,6 +4406,14 @@ function deleteBreedEventSetting(idx){
   settings.splice(idx,1);
   saveDB();
   renderBreedEventSettingsList();
+}
+
+
+function onBreedEventTypeChange(){
+  const type=document.getElementById('breedEventType').value;
+  const noCount=['孵化','羽化'];
+  const countChk=document.getElementById('breedEventCountUp');
+  if(countChk)countChk.checked=!noCount.includes(type);
 }
 
 function updateBreedEventTypeSelect(currentVal){
