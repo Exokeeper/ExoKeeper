@@ -3794,9 +3794,15 @@ function openEditModal(id){
   if(document.getElementById('inputBloodline'))document.getElementById('inputBloodline').value=a.bloodline||'';
   document.querySelectorAll('.seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.sex===currentSex));
   const area=document.getElementById('photoUploadArea');
-  area.innerHTML=photoData
-    ?`<div style="position:relative;display:inline-block;width:100%"><img src="${photoData}" alt="" style="width:100%;border-radius:8px"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`
-    :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  if(photoData){
+    area.style.cursor='default';
+    area.onclick=null;
+    area.innerHTML=`<div style="position:relative"><img src="${photoData}" alt="" style="width:100%;border-radius:8px;display:block"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;z-index:1">✕</button><button onclick="document.getElementById('photoInput').click()" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;z-index:1">変更</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  }else{
+    area.style.cursor='pointer';
+    area.onclick=()=>document.getElementById('photoInput').click();
+    area.innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  }
   renderTagChips('morphWrap','morphInput',morphTags,'morphs','morphSug');
   renderTagChips('hetWrap','hetInput',hetTags,'hets','hetSug');
   renderUserTagCheckboxes(currentAnimalUserTags);
@@ -4723,14 +4729,24 @@ function setSex(v,el){currentSex=v;document.querySelectorAll('.seg-btn').forEach
 
 function removeAnimalPhoto(){
   photoData=null;
-  document.getElementById('photoUploadArea').innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  const area=document.getElementById('photoUploadArea');
+  area.style.cursor='pointer';
+  area.onclick=()=>document.getElementById('photoInput').click();
+  area.innerHTML=`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
   enableSaveBtn();
 }
 
 function handlePhoto(e){
   const file=e.target.files[0];if(!file)return;
   const reader=new FileReader();
-  reader.onload=ev=>{photoData=ev.target.result;document.getElementById('photoUploadArea').innerHTML=`<div style="position:relative;display:inline-block;width:100%"><img src="${photoData}" alt="" style="width:100%;border-radius:8px"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;enableSaveBtn();};
+  reader.onload=ev=>{
+    photoData=ev.target.result;
+    const area=document.getElementById('photoUploadArea');
+    area.style.cursor='default';
+    area.onclick=null;
+    area.innerHTML=`<div style="position:relative"><img src="${photoData}" alt="" style="width:100%;border-radius:8px;display:block"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;z-index:1">✕</button><button onclick="document.getElementById('photoInput').click()" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;z-index:1">変更</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+    enableSaveBtn();
+  };
   reader.readAsDataURL(file);
 }
 
