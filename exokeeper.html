@@ -3500,18 +3500,63 @@ function openFeedModal(animalId){
   const last=DB.feedings.filter(f=>f.animalId===animalId).sort((a,b)=>b.datetime.localeCompare(a.datetime))[0];
   const now=new Date(); now.setMinutes(now.getMinutes()-now.getTimezoneOffset());
   document.getElementById('feedDatetime').value=now.toISOString().slice(0,16);
-  document.getElementById('feedFood').value=last?last.food:'';
   document.getElementById('feedAmount').value=last?last.amount:'';
   document.getElementById('feedResult').value='';
   document.getElementById('feedMemo').value='';
+
+  // よく使う餌ボタンの表示制御
+  const animal=DB.animals.find(a=>a.id===currentAnimalId);
+  let hasFav=false;
+  if(animal&&animal.userTags){
+    animal.userTags.forEach(tagId=>{
+      const tag=DB.userTags.find(t=>t.id===tagId);
+      if(tag&&tag.favFoods&&tag.favFoods.length)hasFav=true;
+    });
+  }
+  const favBtn=document.getElementById('feedFavBtn');
+  if(favBtn)favBtn.style.display=hasFav?'':'none';
+
+  // 前回の記録があればカテゴリ・種類・サイズを引き継ぐ
+  if(last&&last.foodId&&last.foodCat){
+    // 選択式で記録した場合
+    const catBtn=document.querySelector(`#feedCategoryBtns .filter-btn[onclick*="'${last.foodCat}'"]`);
+    selectFeedCategory(last.foodCat, catBtn);
+    setTimeout(()=>{
+      const select=document.getElementById('feedFoodSelect');
+      if(select)select.value=last.foodId||'';
+      onFeedFoodSelect();
+      setTimeout(()=>{
+        const sizeSelect=document.getElementById('feedSizeSelect');
+        if(sizeSelect&&last.size)sizeSelect.value=last.size;
+      },50);
+    },50);
+  }else if(last&&last.food&&last.foodCat==='custom'){
+    // 自由入力で記録した場合
+    const customBtn=document.querySelector("#feedCategoryBtns .filter-btn[onclick*="'custom'"]");
+    selectFeedCategory('custom',customBtn);
+    document.getElementById('feedFood').value=last.food;
+  }else if(hasFav){
+    // よく使う餌がある場合
+    selectFeedCategory('fav',favBtn);
+  }else{
+    selectFeedCategory('live',document.querySelector('#feedCategoryBtns .filter-btn:not(#feedFavBtn)'));
+  }
   document.getElementById('feedModal').classList.add('open');
 }
 
 function saveFeeding(){
-  const food=document.getElementById('feedFood').value.trim();
-  if(!food){alert('餌の種類を入力してください');return;}
-  DB.feedings.push({id:DB.nextId++,animalId:currentAnimalId,datetime:document.getElementById('feedDatetime').value,food,amount:document.getElementById('feedAmount').value.trim(),result:document.getElementById('feedResult').value,memo:document.getElementById('feedMemo').value.trim()});
-  if(!DB.masters.foods.includes(food))DB.masters.foods.push(food);
+  const isFree2=currentFeedCategory==='custom';
+  const isFav=currentFeedCategory==='fav';
+  const foodId2=(!isFree2)?document.getElementById('feedFoodSelect').value:null;
+  const master2=getFoodMaster();
+  const foodItem2=foodId2?master2.find(f=>f.id===foodId2):null;
+  const foodName2=isFree2
+    ?document.getElementById('feedFood').value.trim()
+    :(foodItem2?foodItem2.name:'');
+  if(!foodName2){alert('餌の種類を選択または入力してください');return;}
+  const size2=isFree2?'':(document.getElementById('feedSizeSelect').value||'');
+  DB.feedings.push({id:DB.nextId++,animalId:currentAnimalId,datetime:document.getElementById('feedDatetime').value,food:foodName2,foodId:foodId2||null,foodCat:currentFeedCategory,size:size2,amount:document.getElementById('feedAmount').value.trim(),result:document.getElementById('feedResult').value,memo:document.getElementById('feedMemo').value.trim()});
+  if(foodName2&&!DB.masters.foods.includes(foodName2))DB.masters.foods.push(foodName2);
   saveDB();closeModal('feedModal');showDetail(currentAnimalId,'feeding');
 }
 
