@@ -998,6 +998,7 @@
     <div class="form-group">
       <label class="form-label">カテゴリ</label>
       <div style="display:flex;gap:6px;flex-wrap:wrap" id="feedCategoryBtns">
+        <button class="filter-btn" id="feedFavBtn" onclick="selectFeedCategory('fav',this)" style="display:none">⭐ よく使う</button>
         <button class="filter-btn active" onclick="selectFeedCategory('live',this)">生き餌</button>
         <button class="filter-btn" onclick="selectFeedCategory('frozen',this)">冷凍餌</button>
         <button class="filter-btn" onclick="selectFeedCategory('vegetable',this)">野菜・果物</button>
@@ -1321,6 +1322,17 @@
       <button class="btn btn-ghost" onclick="closeModal('addUserFoodModal')">キャンセル</button>
       <button class="btn btn-success" onclick="saveUserFood()">追加する</button>
     </div>
+  </div>
+</div>
+
+
+<!-- ── User Tag Food Modal ── -->
+<div class="modal-overlay" id="userTagFoodModal">
+  <div class="modal-sheet">
+    <div class="modal-title" id="userTagFoodModalTitle">よく使う餌を設定</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:12px">給餌モーダルで最初に表示される餌を設定します</div>
+    <div id="userTagFoodList"></div>
+    <button class="btn btn-primary" style="margin-top:12px" onclick="closeModal('userTagFoodModal');renderUserTagList()">閉じる</button>
   </div>
 </div>
 
@@ -1911,6 +1923,7 @@ function renderUserTagList(){
       <div class="user-tag-dot" style="background:${t.color}"></div>
       <div class="user-tag-name">${t.name}</div>
       <button class="user-tag-toggle ${t.show?'on':'off'}" onclick="toggleUserTagShow(${t.id})" title="フィルター表示"></button>
+      <button class="user-tag-edit" onclick="openUserTagFoodModal(${t.id})" title="よく使う餌">🍽️</button>
       <button class="user-tag-edit" onclick="openUserTagModalEdit(${t.id})">✏️</button>
     </div>`).join('');
 }
@@ -3836,11 +3849,39 @@ function selectFeedCategory(cat, btn){
     freeGroup.style.display='';
     selectGroup.style.display='none';
     document.getElementById('feedSizeGroup').style.display='none';
+  }else if(cat==='fav'){
+    freeGroup.style.display='none';
+    selectGroup.style.display='';
+    updateFeedFoodSelectFav();
   }else{
     freeGroup.style.display='none';
     selectGroup.style.display='';
     updateFeedFoodSelect(cat);
   }
+}
+
+function updateFeedFoodSelectFav(){
+  const animal=DB.animals.find(a=>a.id===currentAnimalId);
+  const master=getFoodMaster();
+  let favIds=[];
+  if(animal&&animal.userTags){
+    animal.userTags.forEach(tagId=>{
+      const tag=DB.userTags.find(t=>t.id===tagId);
+      if(tag&&tag.favFoods)favIds=[...new Set([...favIds,...tag.favFoods])];
+    });
+  }
+  const foods=master.filter(f=>favIds.includes(f.id)&&f.show);
+  const select=document.getElementById('feedFoodSelect');
+  let html='<option value="">選択してください</option>';
+  if(foods.length){
+    foods.forEach(f=>{
+      html+=`<option value="${f.id}">${f.name}</option>`;
+    });
+  }else{
+    html='<option value="">よく使う餌が設定されていません</option>';
+  }
+  select.innerHTML=html;
+  document.getElementById('feedSizeGroup').style.display='none';
 }
 
 function updateFeedFoodSelect(cat){
@@ -3994,6 +4035,53 @@ function deleteUserFood(id){
   DB.foodMaster=getFoodMaster().filter(f=>f.id!==id);
   saveDB();
   renderFoodMasterSettings();
+}
+
+
+// ─── User Tag Food Settings ──────────────────────
+let editingUserTagFoodId=null;
+
+function openUserTagFoodModal(tagId){
+  editingUserTagFoodId=tagId;
+  const tag=DB.userTags.find(t=>t.id===tagId);
+  if(!tag)return;
+  document.getElementById('userTagFoodModalTitle').textContent=`${tag.name}のよく使う餌`;
+  renderUserTagFoodList(tagId);
+  document.getElementById('userTagFoodModal').classList.add('open');
+}
+
+function renderUserTagFoodList(tagId){
+  const tag=DB.userTags.find(t=>t.id===tagId);
+  if(!tag)return;
+  const selectedIds=tag.favFoods||[];
+  const master=getFoodMaster();
+  const cats=['live','frozen','vegetable','artificial'];
+  const el=document.getElementById('userTagFoodList');
+  
+  el.innerHTML=cats.map(cat=>{
+    const foods=master.filter(f=>f.cat===cat&&f.show);
+    if(!foods.length)return'';
+    return`<div style="margin-bottom:12px">
+      <div style="font-weight:700;font-size:12px;color:var(--text2);margin-bottom:6px">${FOOD_CAT_LABEL[cat]}</div>
+      ${foods.map(f=>`
+        <label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer">
+          <input type="checkbox" ${selectedIds.includes(f.id)?'checked':''} onchange="toggleTagFood(${tagId},'${f.id}',this.checked)" style="width:16px;height:16px">
+          <span style="font-size:13px">${f.name}</span>
+        </label>`).join('')}
+    </div>`;
+  }).join('');
+}
+
+function toggleTagFood(tagId,foodId,checked){
+  const tag=DB.userTags.find(t=>t.id===tagId);
+  if(!tag)return;
+  if(!tag.favFoods)tag.favFoods=[];
+  if(checked){
+    if(!tag.favFoods.includes(foodId))tag.favFoods.push(foodId);
+  }else{
+    tag.favFoods=tag.favFoods.filter(id=>id!==foodId);
+  }
+  saveDB();
 }
 
 // ─── Feed Management ──────────────────────────────
