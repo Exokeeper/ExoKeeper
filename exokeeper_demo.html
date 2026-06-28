@@ -6,7 +6,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>ExoKeeper</title>
+<title>ExoKeeper - Demo</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root {
@@ -422,7 +422,7 @@
 </div>
 
 <div class="header">
-  <div class="header-logo">Exo<span>Keeper</span></div>
+  <div class="header-logo">Exo<span>Keeper</span> <span style="font-size:10px;background:var(--accent2);color:#fff;padding:2px 6px;border-radius:4px;vertical-align:middle;font-weight:600">DEMO</span></div>
   <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
     <span id="headerUserEmail" style="font-size:11px;color:var(--text2)"></span>
     <button onclick="signOut()" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:11px;color:var(--text2);cursor:pointer">ログアウト</button>
@@ -1536,30 +1536,22 @@ const DEMO_SAMPLE_DATA = {
 
 function startDemo(){
   document.getElementById('demoScreen').style.display='none';
+  document.getElementById('authScreen').style.display='none';
   // サンプルデータを直接各フィールドに代入
   const d = JSON.parse(JSON.stringify(DEMO_SAMPLE_DATA));
-  DB.animals = d.animals;
-  DB.feedings = d.feedings;
-  DB.measurements = d.measurements;
-  DB.breedSessions = d.breedSessions;
-  DB.breedEvents = d.breedEvents;
-  DB.tasks = d.tasks;
-  DB.shopItems = d.shopItems||[];
-  DB.shops = d.shops||[];
-  DB.healthLogs = d.healthLogs||[];
-  DB.photos = d.photos||[];
-  DB.feedItems = d.feedItems||[];
-  DB.feedLogs = d.feedLogs||[];
-  DB.feedTags = d.feedTags||[];
-  DB.userTags = d.userTags;
-  DB.catTags = d.catTags;
-  DB.homeMenu = d.homeMenu;
-  DB.nextId = d.nextId;
-  DB.theme = d.theme;
-  // ダミーユーザーでinitApp相当の処理
-  document.getElementById('authScreen').style.display='none';
+  Object.keys(d).forEach(key=>{ DB[key]=d[key]; });
+  // catTagsがない場合のデフォルト
+  if(!DB.catTags||!DB.catTags.length){
+    DB.catTags=[
+      {id:'reptile',show:true},{id:'amphibian',show:false},{id:'arthropod',show:true},
+      {id:'mammal',show:true},{id:'bird',show:false},{id:'fish',show:false},{id:'other',show:true},
+    ];
+  }
   document.getElementById('headerUserEmail').textContent='デモユーザー';
-  initTheme();renderHome();renderAnimals();
+  initTheme();
+  renderHome();
+  // 生体ページを一度表示してからrenderAnimalsを呼ぶ
+  setTimeout(()=>renderAnimals(), 100);
 }
 
 
@@ -3144,7 +3136,7 @@ function renderTasks(){
     return`<div class="task-card" onclick="openTaskModalEdit(${t.id})">
       <div class="task-card-icon">🔔</div>
       <div class="task-card-body">
-        <div class="task-card-name">${t.name}</div>
+        <div class="task-card-name">${t.text||t.name||''}</div>
         ${a?`<div class="task-card-animal">${a.name||a.species||'名前なし'}</div>`:'<div class="task-card-animal" style="color:var(--text2)">全体</div>'}
         <div class="task-card-schedule">${scheduleText}　${t.time}${t.memo?' · '+t.memo:''}</div>
       </div>
@@ -3377,6 +3369,7 @@ function renderAnimals(){
 
   // ユーザータグフィルターボタンを動的生成
   const filterBar=document.getElementById('filterBar');
+  if(!filterBar)return;
   // 役割タグボタンを動的生成
   const existingRoleBtns=filterBar.querySelectorAll('[data-roletag]');
   existingRoleBtns.forEach(b=>b.remove());
