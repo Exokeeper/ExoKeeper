@@ -642,6 +642,15 @@
 
     </div>
 
+    <div class="settings-section-header" onclick="toggleSettingsSection('breedevent')">
+      🥚 繁殖イベント <span id="settings-arrow-breedevent">▶</span>
+    </div>
+    <div id="settings-body-breedevent" style="display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:12px;margin-top:-8px;margin-bottom:8px;background:var(--surface)">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">給餌ログのイベント選択肢を管理します</div>
+      <div id="breedEventSettingsList"></div>
+      <button class="btn btn-primary" style="margin-top:10px;font-size:12px;padding:6px 12px;width:auto" onclick="openAddBreedEventModal()">＋ 追加する</button>
+    </div>
+
     <div class="settings-section-header" onclick="toggleSettingsSection('about')">
       ℹ️ このアプリについて <span id="settings-arrow-about">▶</span>
     </div>
@@ -1128,18 +1137,6 @@
     <div class="form-group">
       <label class="form-label">イベント種別</label>
       <select class="form-select" id="breedEventType">
-        <option value="ペアリング">ペアリング</option>
-        <option value="交尾確認">交尾確認</option>
-        <option value="産卵セット投入">産卵セット投入</option>
-        <option value="産卵確認">産卵確認</option>
-        <option value="採卵">採卵</option>
-        <option value="孵化">孵化</option>
-        <option value="菌糸瓶投入">菌糸瓶投入</option>
-        <option value="菌糸瓶交換">菌糸瓶交換</option>
-        <option value="マット交換">マット交換</option>
-        <option value="蛹化">蛹化</option>
-        <option value="羽化">羽化</option>
-        <option value="その他">その他</option>
       </select>
     </div>
     <div class="form-group">
@@ -1336,6 +1333,22 @@
   </div>
 </div>
 
+
+<!-- ── Add Breed Event Modal ── -->
+<div class="modal-overlay" id="addBreedEventModal">
+  <div class="modal-sheet">
+    <div class="modal-title">イベントを追加</div>
+    <div class="form-group">
+      <label class="form-label">イベント名</label>
+      <input class="form-input" id="newBreedEventName" placeholder="例）産み付け確認">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="closeModal('addBreedEventModal')">キャンセル</button>
+      <button class="btn btn-success" onclick="saveBreedEventSetting()">追加する</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Feed Item Modal ── -->
 <div class="modal-overlay" id="feedItemModal">
   <div class="modal-sheet">
@@ -1478,7 +1491,7 @@ async function syncToCloud(){
       photos:DB.photos,tasks:DB.tasks,healthLogs:DB.healthLogs,
       breedSessions:DB.breedSessions,breedEvents:DB.breedEvents,
       shopItems:DB.shopItems,shops:DB.shops,userTags:DB.userTags,
-      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,feedItems:DB.feedItems,feedLogs:DB.feedLogs,feedTags:DB.feedTags,foodMaster:DB.foodMaster,
+      catTags:DB.catTags,roleTags:DB.roleTags,formFields:DB.formFields,homeMenu:DB.homeMenu,feedItems:DB.feedItems,feedLogs:DB.feedLogs,feedTags:DB.feedTags,foodMaster:DB.foodMaster,breedEventSettings:DB.breedEventSettings,
       masters:DB.masters,nextId:DB.nextId,theme:DB.theme,
     }
   };
@@ -1519,6 +1532,7 @@ async function loadFromCloud(){
   DB.feedLogs=d.feedLogs||[];
   DB.feedTags=d.feedTags||[];
   DB.foodMaster=d.foodMaster||null;
+  DB.breedEventSettings=d.breedEventSettings||null;
   DB.masters=d.masters||{species:[],morphs:[],hets:[],foods:[]};
   DB.nextId=d.nextId||1;DB.theme=d.theme||'blue';
   return true;
@@ -1531,7 +1545,7 @@ function saveDB(){
 }
 
 // ─── DB ───────────────────────────────────────────
-let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,feedItems:[],feedLogs:[],feedTags:[],foodMaster:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
+let DB={animals:[],feedings:[],measurements:[],photos:[],tasks:[],shopItems:[],shops:[],healthLogs:[],breedSessions:[],breedEvents:[],userTags:[],catTags:null,roleTags:null,formFields:null,homeMenu:null,feedItems:[],feedLogs:[],feedTags:[],foodMaster:null,breedEventSettings:null,masters:{species:[],morphs:[],hets:[],foods:[]},nextId:1,theme:'blue'};
 
 function loadDB(){
   try{const s=localStorage.getItem('exokeeper_db');if(s)DB=JSON.parse(s);}catch(e){}
@@ -1784,6 +1798,7 @@ function renderSettings(){
   renderUserTagList();
   renderFeedTagList();
   renderFoodMasterSettings();
+  renderBreedEventSettingsList();
 }
 
 function renderFormFieldSettings(){
@@ -2390,6 +2405,7 @@ function openBreedEventModal(sessionId){
   document.getElementById('breedEventPhotoArea').innerHTML=
     `<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを記録';
+  updateBreedEventTypeSelect('交尾確認');
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -2406,6 +2422,7 @@ function openBreedEventModalEdit(eventId){
     ?`<img src="${breedEventPhoto}" alt="" style="width:100%;border-radius:10px;object-fit:cover;max-height:160px"><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`
     :`<span class="photo-upload-icon">📷</span><span>タップして写真を選択</span><input type="file" id="breedEventPhotoInput" accept="image/*" onchange="handleBreedEventPhoto(event)" style="display:none">`;
   document.querySelector('#breedEventModal .modal-title').textContent='イベントを編集';
+  updateBreedEventTypeSelect(e.type);
   document.getElementById('breedEventModal').classList.add('open');
 }
 
@@ -4292,6 +4309,83 @@ function renderFeedTagList(){
 function deleteFeedTag(id){
   DB.feedTags=DB.feedTags.filter(x=>x.id!==id);
   saveDB();renderFeedTagList();
+}
+
+
+// ─── Breed Event Settings ─────────────────────────
+const BREED_EVENT_PRESET = [
+  {name:'ペアリング',show:true,isPreset:true},
+  {name:'交尾確認',show:true,isPreset:true},
+  {name:'産卵セット投入',show:true,isPreset:true},
+  {name:'産卵確認',show:true,isPreset:true},
+  {name:'採卵',show:true,isPreset:true},
+  {name:'孵化',show:true,isPreset:true},
+  {name:'菌糸瓶投入',show:true,isPreset:true},
+  {name:'菌糸瓶交換',show:true,isPreset:true},
+  {name:'マット交換',show:true,isPreset:true},
+  {name:'蛹化',show:true,isPreset:true},
+  {name:'羽化',show:true,isPreset:true},
+  {name:'その他',show:true,isPreset:true},
+];
+
+function getBreedEventSettings(){
+  if(!DB.breedEventSettings){
+    DB.breedEventSettings=BREED_EVENT_PRESET.map(e=>({...e}));
+  }
+  return DB.breedEventSettings;
+}
+
+function renderBreedEventSettingsList(){
+  const el=document.getElementById('breedEventSettingsList');
+  if(!el)return;
+  const settings=getBreedEventSettings();
+  el.innerHTML=settings.map((e,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
+      <span style="font-size:13px">${e.name}${e.isPreset?'':' ★'}</span>
+      <div style="display:flex;align-items:center;gap:8px">
+        <input type="checkbox" ${e.show?'checked':''} onchange="toggleBreedEventShow(${i},this.checked)" style="width:16px;height:16px">
+        ${!e.isPreset?`<button onclick="deleteBreedEventSetting(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function toggleBreedEventShow(idx,show){
+  const settings=getBreedEventSettings();
+  if(settings[idx])settings[idx].show=show;
+  saveDB();
+}
+
+function openAddBreedEventModal(){
+  document.getElementById('newBreedEventName').value='';
+  document.getElementById('addBreedEventModal').classList.add('open');
+}
+
+function saveBreedEventSetting(){
+  const name=document.getElementById('newBreedEventName').value.trim();
+  if(!name)return;
+  const settings=getBreedEventSettings();
+  settings.push({name,show:true,isPreset:false});
+  saveDB();
+  closeModal('addBreedEventModal');
+  renderBreedEventSettingsList();
+}
+
+function deleteBreedEventSetting(idx){
+  const settings=getBreedEventSettings();
+  settings.splice(idx,1);
+  saveDB();
+  renderBreedEventSettingsList();
+}
+
+function updateBreedEventTypeSelect(currentVal){
+  const settings=getBreedEventSettings();
+  const select=document.getElementById('breedEventType');
+  if(!select)return;
+  select.innerHTML=settings
+    .filter(e=>e.show)
+    .map(e=>`<option value="${e.name}">${e.name}</option>`)
+    .join('');
+  if(currentVal)select.value=currentVal;
 }
 
 // ─── Archive ──────────────────────────────────────
