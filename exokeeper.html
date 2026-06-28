@@ -630,7 +630,7 @@
       </div>
 
       <!-- 餌の種類 -->
-      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+      <div style="border:1px solid var(--border);border-radius:10px;margin-bottom:8px;overflow:hidden">
         <div style="padding:12px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleCustomSub('feedtag')">
           餌の種類 <span id="custom-arrow-feedtag">▶</span>
         </div>
@@ -640,15 +640,18 @@
         </div>
       </div>
 
-    </div>
+      <!-- 繁殖イベント -->
+      <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden">
+        <div style="padding:12px 16px;font-weight:700;font-size:14px;cursor:pointer;display:flex;justify-content:space-between;align-items:center" onclick="toggleCustomSub('breedevent')">
+          繁殖イベント <span id="custom-arrow-breedevent">▶</span>
+        </div>
+        <div id="custom-body-breedevent" style="display:none;padding:8px 14px 12px">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:8px">イベントの表示・非表示と順番を管理します</div>
+          <div id="breedEventSettingsList"></div>
+          <button class="btn btn-primary" style="margin-top:10px;font-size:12px;padding:6px 12px;width:auto" onclick="openAddBreedEventModal()">＋ 追加する</button>
+        </div>
+      </div>
 
-    <div class="settings-section-header" onclick="toggleSettingsSection('breedevent')">
-      🥚 繁殖イベント <span id="settings-arrow-breedevent">▶</span>
-    </div>
-    <div id="settings-body-breedevent" style="display:none;border:1px solid var(--border);border-top:none;border-radius:0 0 12px 12px;padding:12px;margin-top:-8px;margin-bottom:8px;background:var(--surface)">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:8px">給餌ログのイベント選択肢を管理します</div>
-      <div id="breedEventSettingsList"></div>
-      <button class="btn btn-primary" style="margin-top:10px;font-size:12px;padding:6px 12px;width:auto" onclick="openAddBreedEventModal()">＋ 追加する</button>
     </div>
 
     <div class="settings-section-header" onclick="toggleSettingsSection('about')">
@@ -4340,13 +4343,26 @@ function renderBreedEventSettingsList(){
   if(!el)return;
   const settings=getBreedEventSettings();
   el.innerHTML=settings.map((e,i)=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border)">
-      <span style="font-size:13px">${e.name}${e.isPreset?'':' ★'}</span>
-      <div style="display:flex;align-items:center;gap:8px">
-        <input type="checkbox" ${e.show?'checked':''} onchange="toggleBreedEventShow(${i},this.checked)" style="width:16px;height:16px">
-        ${!e.isPreset?`<button onclick="deleteBreedEventSetting(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>`:''}
+    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;padding:0;line-height:1" onclick="moveBreedEvent(${i},-1)" ${i===0?'disabled':''}>▲</button>
+        <button style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:11px;padding:0;line-height:1" onclick="moveBreedEvent(${i},1)" ${i===settings.length-1?'disabled':''}>▼</button>
       </div>
+      <span style="font-size:13px;flex:1">${e.name}${e.isPreset?'':' ★'}</span>
+      <input type="checkbox" ${e.show?'checked':''} onchange="toggleBreedEventShow(${i},this.checked)" style="width:16px;height:16px">
+      ${!e.isPreset?`<button onclick="deleteBreedEventSetting(${i})" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:14px">✕</button>`:''}
     </div>`).join('');
+}
+
+function moveBreedEvent(idx,dir){
+  const settings=getBreedEventSettings();
+  const newIdx=idx+dir;
+  if(newIdx<0||newIdx>=settings.length)return;
+  const tmp=settings[idx];
+  settings[idx]=settings[newIdx];
+  settings[newIdx]=tmp;
+  saveDB();
+  renderBreedEventSettingsList();
 }
 
 function toggleBreedEventShow(idx,show){
