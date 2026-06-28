@@ -232,7 +232,7 @@
   .tag-suggestion-item:hover{background:var(--surface);}
 
   /* ── Photo upload ── */
-  .photo-upload{width:100%;aspect-ratio:3/2;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text2);font-size:13px;position:relative;overflow:hidden;transition:border-color 0.15s;}
+  .photo-upload{width:100%;aspect-ratio:1/1;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;color:var(--text2);font-size:13px;position:relative;overflow:hidden;transition:border-color 0.15s;}
   .photo-upload:hover{border-color:var(--accent);}
   .photo-upload-icon{font-size:32px;}
   .photo-upload img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
@@ -3858,8 +3858,12 @@ function toggleSelfBred(checked){
   }
 }
 
-function saveUserName(){
+async function saveUserName(){
   const name=document.getElementById('inputUserName').value.trim();
+  // Supabaseのuser_metadataに保存
+  if(sbClient){
+    await sbClient.auth.updateUser({data:{display_name:name}});
+  }
   localStorage.setItem('exo_username',name);
   const user=window._currentUser;
   document.getElementById('headerUserEmail').textContent=name||(user?user.email:'');
@@ -4872,7 +4876,7 @@ function applyCrop(){
   const area=document.getElementById('photoUploadArea');
   area.style.cursor='default';
   area.onclick=null;
-  area.innerHTML=`<div style="position:relative"><img src="${photoData}" alt="" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:16px;display:block"><button onclick="removeAnimalPhoto()" style="position:absolute;top:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer;z-index:1">✕</button><button onclick="document.getElementById('photoInput').click()" style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:8px;padding:4px 8px;font-size:11px;cursor:pointer;z-index:1">変更</button></div><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none">`;
+  area.innerHTML=`<img src="${photoData}" alt="" style="width:100%;height:100%;object-fit:cover;border-radius:12px;position:absolute;inset:0"><input type="file" id="photoInput" accept="image/*" onchange="handlePhoto(event)" style="display:none"><div style="position:absolute;top:6px;right:6px;display:flex;flex-direction:column;gap:4px"><button onclick="removeAnimalPhoto()" style="background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:50%;width:28px;height:28px;font-size:14px;cursor:pointer">✕</button><button onclick="document.getElementById('photoInput').click()" style="background:rgba(0,0,0,0.6);border:none;color:#fff;border-radius:8px;padding:4px 6px;font-size:10px;cursor:pointer">変更</button></div>`;
   
   enableSaveBtn();
   closeCropModal();
@@ -5002,7 +5006,11 @@ document.addEventListener('click',e=>{
 async function initApp(user){
   currentUser=user;
   window._currentUser=user;
-  const savedName=localStorage.getItem('exo_username');
+  // user_metadataとlocalStorageの両方から名前を取得（metadataを優先）
+  const metaName=user.user_metadata?.display_name||'';
+  const localName=localStorage.getItem('exo_username')||'';
+  const savedName=metaName||localName;
+  if(metaName&&!localName)localStorage.setItem('exo_username',metaName);
   document.getElementById('headerUserEmail').textContent=savedName||user.email;
   if(document.getElementById('inputUserName'))document.getElementById('inputUserName').value=savedName||'';
   document.getElementById('authScreen').style.display='none';
